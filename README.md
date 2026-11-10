@@ -29,7 +29,3 @@ python3 src/build.py
 ## 範例
 
 `samples/demo_RevA.xlsx` 與 `demo_RevB.xlsx`：Key 選 `SKU`，包含新增、刪除、修改、全形/大小寫/空白差異與重複 Key 的示範。
-
-## 授權
-
-SheetJS Community Edition 0.18.5 以 Apache-2.0 授權內嵌，見 `THIRD-PARTY-SheetJS-LICENSE.txt`。本專案自身授權請自行選擇（如 MIT）。
