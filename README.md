@@ -7,7 +7,7 @@ Offline single-file HTML tool to compare two Excel sheets of the same format by 
 ## 使用方式
 
 - **直接下載使用**：下載 `index.html`，雙擊用 Chrome / Edge 開啟（可離線）。
-- **GitHub Pages 線上版**：Settings → Pages → Source 選 `main` 分支、`/ (root)`，之後網址為 `https://<帳號>.github.io/Excel-RevDiff-Offline/`。頁面仍是純前端，檔案不會離開你的電腦。
+- **線上版（GitHub Pages）**：<https://blex01000001.github.io/Excel-RevDiff-Offline/>　純前端靜態網頁，檔案不會離開你的電腦。
 
 ## 功能
 
