@@ -1,0 +1,671 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Excel RevDiff Offline</title>
+<style>
+:root{
+  --bg:#f4f6f9;--panel:#fff;--text:#1d2433;--muted:#667085;--line:#d9dee7;--accent:#2457c5;--accent-soft:#e6edfb;
+  --add:#d7f2dd;--add-t:#17642b;--del:#fbd9d9;--del-t:#a12121;--mod:#fff1b3;--mod-t:#7a5a00;--same-t:#475467;
+  --old:#b42318;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#12161d;--panel:#1b212b;--text:#e6e9ef;--muted:#98a2b3;--line:#323b4a;--accent:#7aa2f7;--accent-soft:#25324d;
+  --add:#1c3d27;--add-t:#8fe3a6;--del:#4a2022;--del-t:#ff9c9c;--mod:#5a4a10;--mod-t:#ffe38a;--same-t:#b5bdcb;--old:#ff9c8f}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 "Microsoft JhengHei","PingFang TC","Noto Sans CJK TC",system-ui,sans-serif}
+header{padding:14px 20px;border-bottom:1px solid var(--line);background:var(--panel);display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+header h1{margin:0;font-size:18px}
+header span{color:var(--muted);font-size:12px}
+main{padding:16px 20px;max-width:1800px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}
+.card h2{margin:0 0 10px;font-size:14px}
+.files{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:800px){.files{grid-template-columns:1fr}}
+.drop{border:2px dashed var(--line);border-radius:8px;padding:14px;text-align:center;cursor:pointer;color:var(--muted);display:block}
+.drop.over,.drop:hover{border-color:var(--accent);background:var(--accent-soft)}
+.drop b{color:var(--text)}
+.drop input{display:none}
+.finfo{margin-top:8px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:13px}
+.finfo label{display:flex;gap:6px;align-items:center}
+select,input[type=number],input[type=search]{font:inherit;padding:4px 8px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--text)}
+input[type=number]{width:70px}
+.meta{color:var(--muted);font-size:12px;margin-top:4px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);border-radius:999px;padding:3px 10px;cursor:pointer;user-select:none;font-size:13px;background:var(--panel)}
+.chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.hint{color:var(--muted);font-size:12px;margin:6px 0 0}
+details{margin-top:10px}
+summary{cursor:pointer;color:var(--accent)}
+.colgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:4px 12px;max-height:260px;overflow:auto;margin-top:8px;font-size:13px}
+.colgrid .r{display:flex;align-items:center;gap:8px;border-bottom:1px dotted var(--line);padding:2px 0}
+.colgrid .r b{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.opts{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:8px}
+.opts label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.stat{border-radius:8px;padding:10px 14px;border:1px solid var(--line)}
+.stat .n{font-size:26px;font-weight:700;line-height:1.1}
+.stat.add{background:var(--add);color:var(--add-t)}.stat.del{background:var(--del);color:var(--del-t)}
+.stat.mod{background:var(--mod);color:var(--mod-t)}.stat.same{color:var(--same-t)}
+.colstat{margin-top:10px;font-size:13px;color:var(--muted)}
+.colstat b{color:var(--text)}
+.warn{border:1px solid #e0a800;background:rgba(255,193,7,.12);border-radius:8px;padding:10px 12px}
+.warn.err{border-color:#d92d20;background:rgba(217,45,32,.1)}
+.warn h3{margin:0 0 4px;font-size:14px}
+.warn ul{margin:4px 0 0;padding-left:20px;max-height:220px;overflow:auto;font-size:13px}
+.warn code{background:rgba(0,0,0,.08);padding:0 4px;border-radius:3px}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:10px}
+.toolbar input[type=search]{min-width:240px;flex:0 1 320px}
+.fchip{border:1px solid var(--line);border-radius:6px;padding:3px 10px;cursor:pointer;background:var(--panel);font-size:13px;color:var(--text)}
+.fchip.on.add{background:var(--add);color:var(--add-t);border-color:var(--add-t)}
+.fchip.on.del{background:var(--del);color:var(--del-t);border-color:var(--del-t)}
+.fchip.on.mod{background:var(--mod);color:var(--mod-t);border-color:var(--mod-t)}
+.fchip.on.same,.fchip.on.all{background:var(--accent-soft);border-color:var(--accent)}
+.fchip:not(.on){opacity:.55}
+button.primary{background:var(--accent);color:#fff;border:0;border-radius:6px;padding:6px 14px;font:inherit;cursor:pointer}
+button.primary:disabled{opacity:.4;cursor:not-allowed}
+.sp{flex:1}
+.tw{overflow:auto;max-height:72vh;border:1px solid var(--line);border-radius:8px}
+table{border-collapse:separate;border-spacing:0;font-size:13px;width:max-content;min-width:100%}
+th,td{padding:4px 8px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);white-space:nowrap;vertical-align:top;text-align:left}
+th{position:sticky;top:0;background:var(--panel);z-index:2;font-weight:600;border-bottom:2px solid var(--line)}
+th.key{background:var(--accent-soft)}
+td.cat,th.cat{position:sticky;left:0;z-index:1;background:var(--panel);font-weight:600}
+th.cat{z-index:3}
+tr.add td{background:var(--add);color:var(--add-t)}
+tr.del td{background:var(--del);color:var(--del-t)}
+tr.same td{color:var(--same-t)}
+tr.add td.cat,tr.del td.cat,tr.mod td.cat{}
+tr.mod td.cat{background:var(--mod);color:var(--mod-t)}
+td.chg{background:var(--mod)!important;color:var(--mod-t)!important}
+td.chg .o{color:var(--old);text-decoration:line-through;opacity:.9}
+td.chg .arrow{margin:0 4px;opacity:.7}
+td.chg .nv{font-weight:700}
+td.chg .dl{display:inline-block;margin-left:6px;padding:0 5px;border-radius:4px;background:rgba(0,0,0,.12);font-weight:700}
+.empty{font-style:italic;opacity:.7}
+.rn{color:var(--muted);text-align:right}
+.more{text-align:center;padding:10px}
+.ph{color:var(--muted);text-align:center;padding:30px}
+</style>
+</head>
+<body>
+<header><h1>Excel RevDiff Offline</h1><span>比對兩份格式相同的 Excel・完全離線，資料僅在本機瀏覽器處理，不會上傳</span></header>
+<main>
+  <section class="card">
+    <h2>① 選擇檔案</h2>
+    <div class="files" id="files"></div>
+  </section>
+
+  <section class="card" id="cfgCard" hidden>
+    <h2>② 比對設定</h2>
+    <div><b>Key 欄位</b>（勾選的欄位組合成唯一 Key）</div>
+    <div class="chips" id="keyChips" style="margin-top:6px"></div>
+    <p class="hint" id="keyHint"></p>
+    <details>
+      <summary>進階：選擇要比對的欄位 / 數量欄（顯示差值）</summary>
+      <div class="hint">「比對」取消勾選＝忽略該欄的差異；「數量」勾選＝該欄變動時顯示差值（如 12 → 15，+3）。</div>
+      <div class="colgrid" id="colGrid"></div>
+    </details>
+    <div class="opts">
+      <label><input type="checkbox" id="optHideEmpty" checked> 隱藏全空欄位</label>
+      <label><input type="checkbox" id="optOnlyDiff"> 只顯示 Key 與有差異的欄位</label>
+    </div>
+    <p class="hint">比對前正規化：去除前後空白、全形轉半形、忽略大小寫、數字 10 與 10.0 視為相同（有前置 0 的代碼如 007 不會被當成數字）。</p>
+  </section>
+
+  <div id="msg"></div>
+
+  <section class="card" id="sumCard" hidden>
+    <h2>③ 比對摘要</h2>
+    <div class="stats" id="stats"></div>
+    <div class="colstat" id="colStat"></div>
+  </section>
+
+  <div id="warns"></div>
+
+  <section class="card" id="resCard" hidden>
+    <h2>④ 比對結果</h2>
+    <div class="toolbar">
+      <div class="chips" id="fchips"></div>
+      <input type="search" id="q" placeholder="搜尋任何欄位（可用空白分隔多個關鍵字）">
+      <span class="meta" id="cnt"></span>
+      <span class="sp"></span>
+      <label class="opts" style="margin:0"><span style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="expFiltered"> 僅匯出目前篩選結果</span></label>
+      <button class="primary" id="btnExport">匯出 .xlsx</button>
+    </div>
+    <div class="tw" id="tw"></div>
+  </section>
+</main>
+
+<script>/*__SHEETJS__*/</script>
+<script>
+'use strict';
+/* ================= 工具函式 ================= */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const NUM_RE = /^[+-]?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?$/;
+
+function cellStr(v){
+  if (v == null) return '';
+  if (v instanceof Date){
+    if (isNaN(v)) return '';
+    const p = n => String(n).padStart(2,'0');
+    const d = v.getFullYear()+'-'+p(v.getMonth()+1)+'-'+p(v.getDate());
+    const t = p(v.getHours())+':'+p(v.getMinutes());
+    return (v.getHours()||v.getMinutes()) ? d+' '+t : d;
+  }
+  return String(v);
+}
+/* 文字正規化：NFKC(全形→半形)、去前後空白、合併連續空白、轉小寫 */
+function normText(v){
+  return cellStr(v).normalize('NFKC').replace(/[ 　]/g,' ').trim().replace(/\s+/g,' ').toLowerCase();
+}
+/* 嘗試把正規化後文字視為數字；有前置 0 的代碼（007）不視為數字 */
+function numOf(s){
+  let t = s;
+  if (/^[+-]?\d{1,3}(,\d{3})+(\.\d+)?$/.test(t)) t = t.replace(/,/g,'');
+  if (!NUM_RE.test(t)) return null;
+  if (/^[+-]?0\d/.test(t)) return null;
+  const n = Number(t);
+  return isFinite(n) ? n : null;
+}
+function norm(v){
+  const s = normText(v), n = numOf(s);
+  return n === null ? s : String(n === 0 ? 0 : n);
+}
+/* 差值用：寬鬆解析數字（含前置 0） */
+function parseNum(v){
+  let s = normText(v).replace(/,/g,'');
+  if (s === '' || !NUM_RE.test(s)) return null;
+  const n = Number(s); return isFinite(n) ? n : null;
+}
+function fmtDelta(d){
+  d = Math.round(d*1e9)/1e9;
+  return (d > 0 ? '+' : '') + String(d);
+}
+
+/* ================= 狀態 ================= */
+const S = {
+  A:{id:'A', label:'Rev A（舊版）', wb:null, name:'', sheet:'', hr:1, aoa:null, off:0, headers:[], rows:null},
+  B:{id:'B', label:'Rev B（新版）', wb:null, name:'', sheet:'', hr:1, aoa:null, off:0, headers:[], rows:null},
+};
+const cfg = { key:new Set(), cmp:new Set(), qty:new Set(), seen:new Set() };
+let COLS = [];          // 兩檔欄位聯集
+let R = null;           // 最近一次比對結果
+let shown = [];         // 目前篩選後的 entries
+let visCols = [];       // 目前顯示的欄位
+let statusOn = new Set(['add','del','mod','same']);
+let pageSize = 500;
+
+/* ================= 讀檔 ================= */
+function buildSlotUI(slot){
+  const el = document.createElement('div');
+  el.innerHTML = `
+    <label class="drop" id="drop${slot.id}">
+      <input type="file" accept=".xlsx,.xlsm,.xls" id="file${slot.id}">
+      <b>${slot.label}</b><br>點擊選擇檔案，或把 .xlsx 拖曳到這裡
+    </label>
+    <div class="finfo" id="info${slot.id}" hidden>
+      <span id="fname${slot.id}" style="font-weight:600"></span>
+      <label>工作表 <select id="sheet${slot.id}"></select></label>
+      <label>標題列在第 <input type="number" min="1" id="hr${slot.id}"> 列</label>
+    </div>
+    <div class="meta" id="meta${slot.id}"></div>`;
+  $('#files').appendChild(el);
+  const inp = $('#file'+slot.id), drop = $('#drop'+slot.id);
+  inp.addEventListener('change', () => inp.files[0] && loadFile(slot, inp.files[0]));
+  ['dragenter','dragover'].forEach(e => drop.addEventListener(e, ev => {ev.preventDefault(); drop.classList.add('over');}));
+  ['dragleave','drop'].forEach(e => drop.addEventListener(e, ev => {ev.preventDefault(); drop.classList.remove('over');}));
+  drop.addEventListener('drop', ev => { const f = ev.dataTransfer.files[0]; if (f) loadFile(slot, f); });
+  $('#sheet'+slot.id).addEventListener('change', e => { slot.sheet = e.target.value; slot.aoa = null; parseSlot(slot, true); refresh(); });
+  $('#hr'+slot.id).addEventListener('change', e => { slot.hr = Math.max(1, parseInt(e.target.value)||1); parseSlot(slot, false); refresh(); });
+}
+function showMsg(html, err){
+  $('#msg').innerHTML = html ? `<div class="warn ${err?'err':''}">${html}</div>` : '';
+}
+function loadFile(slot, file){
+  const rd = new FileReader();
+  rd.onerror = () => showMsg(`無法讀取檔案 <code>${esc(file.name)}</code>`, true);
+  rd.onload = () => {
+    try{
+      const wb = XLSX.read(new Uint8Array(rd.result), {type:'array', cellDates:true});
+      if (!wb.SheetNames.length) throw new Error('檔案內沒有工作表');
+      slot.wb = wb; slot.name = file.name;
+      const other = slot.id === 'A' ? S.B : S.A;
+      slot.sheet = (other.wb && wb.SheetNames.includes(other.sheet)) ? other.sheet : wb.SheetNames[0];
+      $('#sheet'+slot.id).innerHTML = wb.SheetNames.map(n => `<option>${esc(n)}</option>`).join('');
+      $('#sheet'+slot.id).value = slot.sheet;
+      $('#fname'+slot.id).textContent = file.name;
+      $('#info'+slot.id).hidden = false;
+      showMsg('');
+      parseSlot(slot, true);
+      refresh();
+    }catch(e){
+      showMsg(`讀取 <code>${esc(file.name)}</code> 失敗：${esc(e.message||e)}（請確認是有效的 .xlsx，且未加密）`, true);
+    }
+  };
+  rd.readAsArrayBuffer(file);
+}
+function detectHeader(aoa){
+  const lim = Math.min(aoa.length, 30);
+  const cnt = i => aoa[i].filter(c => cellStr(c).trim() !== '').length;
+  let mx = 0;
+  for (let i=0;i<lim;i++) mx = Math.max(mx, cnt(i));
+  for (let i=0;i<lim;i++) if (mx && cnt(i) >= mx*0.8) return i;
+  return 0;
+}
+function parseSlot(slot, autoHeader){
+  const ws = slot.wb.Sheets[slot.sheet];
+  if (!slot.aoa){
+    if (!ws || !ws['!ref']){ slot.aoa = []; slot.off = 0; }
+    else{
+      slot.off = XLSX.utils.decode_range(ws['!ref']).s.r;
+      slot.aoa = XLSX.utils.sheet_to_json(ws, {header:1, raw:true, defval:'', blankrows:true});
+    }
+  }
+  if (autoHeader) slot.hr = slot.aoa.length ? detectHeader(slot.aoa) + slot.off + 1 : 1;
+  $('#hr'+slot.id).value = slot.hr;
+  const hi = slot.hr - slot.off - 1;
+  const hrow = slot.aoa[hi];
+  if (!hrow){ slot.headers = []; slot.rows = []; $('#meta'+slot.id).textContent = '標題列超出範圍'; return; }
+  const seen = new Map();
+  slot.headers = hrow.map((h,i) => {
+    let n = cellStr(h).normalize('NFKC').trim() || ('欄'+(i+1));
+    if (seen.has(n)){ const k = seen.get(n)+1; seen.set(n,k); n = n+'_'+k; } else seen.set(n,1);
+    return n;
+  });
+  slot.rows = [];
+  for (let i=hi+1;i<slot.aoa.length;i++){
+    const r = slot.aoa[i];
+    if (r.every(c => cellStr(c).trim() === '')) continue;
+    const v = {};
+    slot.headers.forEach((h,j) => v[h] = r[j] === undefined ? '' : r[j]);
+    slot.rows.push({rn: i + slot.off + 1, v, idx: slot.rows.length});
+  }
+  $('#meta'+slot.id).textContent = `${slot.rows.length} 筆資料列、${slot.headers.length} 欄（標題列：${slot.headers.slice(0,6).join(' / ')}${slot.headers.length>6?' …':''}）`;
+}
+
+/* ================= 欄位設定 ================= */
+function syncColumns(){
+  const a = S.A.headers || [], b = S.B.headers || [];
+  COLS = [...a, ...b.filter(x => !a.includes(x))];
+  COLS.forEach(c => {
+    if (cfg.seen.has(c)) return;
+    cfg.seen.add(c);
+    cfg.cmp.add(c);
+    if (/^(qty|quantity|數量)$/i.test(c)) cfg.qty.add(c);
+  });
+  // 通用預設：若目前沒有任何有效的 Key，先選第一欄，使用者再自行調整
+  if (COLS.length && !COLS.some(c => cfg.key.has(c))) cfg.key.add(COLS[0]);
+}
+function renderCfg(){
+  $('#cfgCard').hidden = !(S.A.rows && S.B.rows);
+  $('#keyChips').innerHTML = COLS.map(c => `<span class="chip ${cfg.key.has(c)?'on':''}" data-c="${esc(c)}">${esc(c)}</span>`).join('');
+  $('#colGrid').innerHTML = COLS.map(c => `<div class="r"><b title="${esc(c)}">${esc(c)}</b>
+    <label><input type="checkbox" data-k="cmp" data-c="${esc(c)}" ${cfg.cmp.has(c)?'checked':''} ${cfg.key.has(c)?'disabled':''}> 比對</label>
+    <label><input type="checkbox" data-k="qty" data-c="${esc(c)}" ${cfg.qty.has(c)?'checked':''}> 數量</label></div>`).join('');
+  const ks = COLS.filter(c => cfg.key.has(c));
+  $('#keyHint').innerHTML = ks.length ? `目前 Key ＝ <code>${ks.map(esc).join(' + ')}</code>` : '⚠ 請至少選擇一個 Key 欄位';
+}
+$('#keyChips').addEventListener('click', e => {
+  const c = e.target.dataset && e.target.dataset.c; if (c === undefined) return;
+  cfg.key.has(c) ? cfg.key.delete(c) : cfg.key.add(c);
+  refresh(true);
+});
+$('#colGrid').addEventListener('change', e => {
+  const t = e.target; if (!t.dataset.k) return;
+  const set = cfg[t.dataset.k];
+  t.checked ? set.add(t.dataset.c) : set.delete(t.dataset.c);
+  runCompare();
+});
+['optHideEmpty','optOnlyDiff'].forEach(id => $('#'+id).addEventListener('change', renderTable));
+
+function refresh(skipSync){
+  if (!skipSync) syncColumns();
+  renderCfg();
+  runCompare();
+}
+
+/* ================= 比對核心 ================= */
+function rowKey(row, keyCols){ return keyCols.map(c => norm(row.v[c])).join('\u0001'); }
+function keyLabel(row, keyCols){ return keyCols.map(c => cellStr(row.v[c]).trim()).join(' | '); }
+
+function diffRows(a, b, cols){
+  const out = [];
+  for (const c of cols){
+    if (norm(a.v[c]) !== norm(b.v[c])) out.push(c);
+  }
+  return out;
+}
+function pairGroup(as, bs, cols){
+  // 回傳 [[a,b],...]；多對多時依「差異最少」優先配對，同分則依原順序
+  if (as.length === 1 && bs.length === 1) return [[as[0], bs[0]]];
+  const cand = [];
+  as.forEach((a,i) => bs.forEach((b,j) => cand.push({d:diffRows(a,b,cols).length, gap:Math.abs(i-j), i, j})));
+  cand.sort((x,y) => x.d-y.d || x.gap-y.gap || x.i-y.i || x.j-y.j);
+  const ua = new Set(), ub = new Set(), pairs = [];
+  for (const c of cand){
+    if (ua.has(c.i) || ub.has(c.j)) continue;
+    ua.add(c.i); ub.add(c.j); pairs.push([as[c.i], bs[c.j]]);
+  }
+  return pairs;
+}
+function groupBy(rows, keyCols){
+  const m = new Map();
+  for (const r of rows){
+    const k = rowKey(r, keyCols);
+    if (!m.has(k)) m.set(k, []);
+    m.get(k).push(r);
+  }
+  return m;
+}
+function compare(A, B, keyCols, cmpCols, qtyCols){
+  const gA = groupBy(A.rows, keyCols), gB = groupBy(B.rows, keyCols);
+  const dups = {A:[], B:[]};
+  for (const [side, g, rows] of [['A',gA],['B',gB]]){
+    for (const [k, rs] of g) if (rs.length > 1)
+      dups[side].push({key: keyLabel(rs[0], keyCols) || '（Key 全空）', count: rs.length, rns: rs.map(r => r.rn)});
+  }
+  const mainEntries = [], aMatch = new Map(), delEntries = [];
+  const mk = (a, b) => {
+    const e = {a, b, changes: [], status: ''};
+    if (a && b){
+      e.changes = diffRows(a, b, cmpCols).map(c => {
+        const ch = {col:c, oldV:cellStr(a.v[c]), newV:cellStr(b.v[c]), delta:null};
+        if (qtyCols.has(c)){
+          const x = parseNum(a.v[c]), y = parseNum(b.v[c]);
+          if (x !== null && y !== null) ch.delta = y - x;
+        }
+        return ch;
+      });
+      e.status = e.changes.length ? 'mod' : 'same';
+    } else e.status = b ? 'add' : 'del';
+    return e;
+  };
+  // 以 B 的順序輸出；同 Key 多筆時一次處理整組
+  const doneKeys = new Set();
+  const pairedB = new Map();   // B row -> entry
+  for (const [k, bs] of gB){
+    const as = gA.get(k) || [];
+    const pairs = pairGroup(as, bs, cmpCols);
+    const usedA = new Set(), usedB = new Set();
+    for (const [a,b] of pairs){ const e = mk(a,b); pairedB.set(b, e); aMatch.set(a, e); usedA.add(a); usedB.add(b); }
+    for (const b of bs) if (!usedB.has(b)) pairedB.set(b, mk(null,b));
+    for (const a of as) if (!usedA.has(a)) delEntries.push(mk(a,null));
+    doneKeys.add(k);
+  }
+  for (const [k, as] of gA) if (!doneKeys.has(k)) for (const a of as) delEntries.push(mk(a,null));
+  for (const b of B.rows) mainEntries.push(pairedB.get(b));
+  // 刪除列：插在 A 中「前一個有對應到的列」之後；找不到則放最前
+  const anchor = new Map(); // entry|null -> [dels]
+  const aIndex = new Map(A.rows.map((r,i) => [r,i]));
+  for (const d of delEntries.sort((x,y) => x.a.idx - y.a.idx)){
+    let i = aIndex.get(d.a) - 1, tgt = null;
+    for (; i >= 0; i--){ const m = aMatch.get(A.rows[i]); if (m){ tgt = m; break; } }
+    if (!anchor.has(tgt)) anchor.set(tgt, []);
+    anchor.get(tgt).push(d);
+  }
+  const entries = [...(anchor.get(null) || [])];
+  for (const e of mainEntries){ entries.push(e); if (anchor.has(e)) entries.push(...anchor.get(e)); }
+  const counts = {add:0, del:0, mod:0, same:0};
+  const colCount = {};
+  for (const e of entries){
+    counts[e.status]++;
+    e.hay = [e.status, ...Object.values((e.b||e.a).v).map(normText), ...(e.a ? Object.values(e.a.v).map(normText) : [])].join('\u0001');
+    e.hay += '\u0001' + ({add:'新增',del:'刪除',mod:'修改',same:'未變'})[e.status];
+    for (const c of e.changes) colCount[c.col] = (colCount[c.col]||0) + 1;
+  }
+  return {entries, counts, colCount, dups};
+}
+
+function runCompare(){
+  const ok = S.A.rows && S.B.rows;
+  $('#sumCard').hidden = $('#resCard').hidden = !ok;
+  $('#warns').innerHTML = '';
+  if (!ok){ R = null; return; }
+  const keyCols = COLS.filter(c => cfg.key.has(c));
+  if (!keyCols.length){
+    showMsg('請至少選擇一個 Key 欄位。', true);
+    $('#sumCard').hidden = $('#resCard').hidden = true; R = null; return;
+  }
+  const missA = keyCols.filter(c => !S.A.headers.includes(c)), missB = keyCols.filter(c => !S.B.headers.includes(c));
+  if (missA.length || missB.length){
+    showMsg(`Key 欄位 ${[...missA.map(c=>'<code>'+esc(c)+'</code>（Rev A 沒有）'), ...missB.map(c=>'<code>'+esc(c)+'</code>（Rev B 沒有）')].join('、')}，請調整 Key 或標題列。`, true);
+    $('#sumCard').hidden = $('#resCard').hidden = true; R = null; return;
+  }
+  showMsg('');
+  const cmpCols = COLS.filter(c => !cfg.key.has(c) && cfg.cmp.has(c));
+  R = compare(S.A, S.B, keyCols, cmpCols, cfg.qty);
+  R.keyCols = keyCols; R.cmpCols = cmpCols;
+  renderSummary(); renderWarnings(); renderTable();
+}
+
+/* ================= 顯示 ================= */
+const LABEL = {add:'新增', del:'刪除', mod:'修改', same:'未變'};
+function renderSummary(){
+  const c = R.counts;
+  $('#stats').innerHTML = `
+    <div class="stat add"><div class="n">${c.add}</div>新增</div>
+    <div class="stat del"><div class="n">${c.del}</div>刪除</div>
+    <div class="stat mod"><div class="n">${c.mod}</div>修改</div>
+    <div class="stat same"><div class="n">${c.same}</div>未變</div>
+    <div class="stat"><div class="n">${R.entries.length}</div>總列數</div>`;
+  const cc = Object.entries(R.colCount).sort((a,b) => b[1]-a[1]);
+  $('#colStat').innerHTML = cc.length
+    ? '修改欄位統計：' + cc.map(([k,v]) => `<b>${esc(k)}</b> ×${v}`).join('　')
+    : '沒有任何欄位被修改。';
+}
+function renderWarnings(){
+  const w = [];
+  for (const side of ['A','B']){
+    const d = R.dups[side];
+    if (!d.length) continue;
+    const rows = d.reduce((s,x) => s + x.count, 0);
+    w.push(`<div class="warn"><h3>⚠ ${S[side].label} 有 ${d.length} 組重複 Key（共 ${rows} 列）</h3>
+      <div>同一檔案內 Key 相同的列不會被略過：會與另一檔的同 Key 列依「差異最少」優先一對一配對，多出來的列計為新增 / 刪除。建議把更多欄位勾進 Key 以降低重複。</div>
+      <ul>${d.slice(0,200).map(x => `<li><code>${esc(x.key)}</code> × ${x.count}　（Excel 列 ${x.rns.join(', ')}）</li>`).join('')}${d.length>200?`<li>…另有 ${d.length-200} 組</li>`:''}</ul></div>`);
+  }
+  const onlyA = S.A.headers.filter(c => !S.B.headers.includes(c)), onlyB = S.B.headers.filter(c => !S.A.headers.includes(c));
+  if (onlyA.length || onlyB.length)
+    w.push(`<div class="warn"><h3>⚠ 兩檔欄位不完全相同</h3>
+      ${onlyA.length?`<div>只在 Rev A：${onlyA.map(c=>'<code>'+esc(c)+'</code>').join(' ')}</div>`:''}
+      ${onlyB.length?`<div>只在 Rev B：${onlyB.map(c=>'<code>'+esc(c)+'</code>').join(' ')}</div>`:''}
+      <div>缺少的一側視為空值比對。</div></div>`);
+  $('#warns').innerHTML = w.join('');
+}
+function renderFilterChips(){
+  const c = R.counts;
+  $('#fchips').innerHTML =
+    [['all','全部',R.entries.length],['add','新增',c.add],['del','刪除',c.del],['mod','修改',c.mod],['same','未變',c.same]]
+    .map(([k,n,v]) => {
+      const on = k === 'all' ? statusOn.size === 4 : statusOn.has(k);
+      return `<button class="fchip ${k} ${on?'on':''}" data-s="${k}">${n} ${v}</button>`;
+    }).join('');
+}
+$('#fchips').addEventListener('click', e => {
+  const s = e.target.dataset && e.target.dataset.s; if (!s) return;
+  if (s === 'all') statusOn = new Set(['add','del','mod','same']);
+  else if (statusOn.size === 4) statusOn = new Set([s]);
+  else { statusOn.has(s) ? statusOn.delete(s) : statusOn.add(s); if (!statusOn.size) statusOn = new Set(['add','del','mod','same']); }
+  pageSize = 500; renderTable();
+});
+$('#q').addEventListener('input', () => { pageSize = 500; renderTable(); });
+
+function filteredEntries(){
+  const terms = normText($('#q').value).split(' ').filter(Boolean);
+  return R.entries.filter(e => statusOn.has(e.status) && terms.every(t => e.hay.includes(t)));
+}
+function computeVisCols(list){
+  let cols = COLS.slice();
+  if ($('#optHideEmpty').checked)
+    cols = cols.filter(c => R.entries.some(e => (e.a && cellStr(e.a.v[c]).trim()) || (e.b && cellStr(e.b.v[c]).trim())));
+  if ($('#optOnlyDiff').checked)
+    cols = cols.filter(c => R.keyCols.includes(c) || R.colCount[c]);
+  return cols;
+}
+function cellHTML(e, c){
+  const ch = e.changes.find(x => x.col === c);
+  const val = (e.b || e.a).v[c];
+  if (!ch) return `<td>${esc(cellStr(val))}</td>`;
+  const emp = '<span class="empty">空</span>';
+  const o = ch.oldV.trim() === '' ? emp : esc(ch.oldV), n = ch.newV.trim() === '' ? emp : esc(ch.newV);
+  return `<td class="chg" title="舊：${esc(ch.oldV)} → 新：${esc(ch.newV)}"><span class="o">${o}</span><span class="arrow">→</span><span class="nv">${n}</span>${ch.delta !== null ? `<span class="dl">${fmtDelta(ch.delta)}</span>` : ''}</td>`;
+}
+function renderTable(){
+  if (!R) return;
+  renderFilterChips();
+  shown = filteredEntries();
+  visCols = computeVisCols(shown);
+  $('#cnt').textContent = `顯示 ${shown.length} / ${R.entries.length} 列`;
+  $('#btnExport').disabled = !R.entries.length;
+  const head = `<tr><th class="cat">類別</th><th>差異欄位</th><th>A 列</th><th>B 列</th>${visCols.map(c => `<th class="${R.keyCols.includes(c)?'key':''}">${esc(c)}</th>`).join('')}</tr>`;
+  const part = shown.slice(0, pageSize);
+  const body = part.map(e => `<tr class="${e.status}"><td class="cat">${LABEL[e.status]}</td>
+    <td>${esc(e.changes.map(x=>x.col).join(', '))}</td><td class="rn">${e.a?e.a.rn:''}</td><td class="rn">${e.b?e.b.rn:''}</td>
+    ${visCols.map(c => cellHTML(e,c)).join('')}</tr>`).join('');
+  $('#tw').innerHTML = shown.length
+    ? `<table><thead>${head}</thead><tbody>${body}</tbody></table>` +
+      (shown.length > pageSize ? `<div class="more"><button class="fchip" id="btnMore">再載入 500 列（尚有 ${shown.length-pageSize} 列）</button></div>` : '')
+    : '<div class="ph">沒有符合條件的列</div>';
+  const m = $('#btnMore'); if (m) m.onclick = () => { pageSize += 500; renderTable(); };
+}
+
+/* ================= 匯出 .xlsx（自製寫檔，可帶顏色） ================= */
+const CRC_T = (() => { const t = new Uint32Array(256); for (let n=0;n<256;n++){ let c=n; for (let k=0;k<8;k++) c = c&1 ? 0xEDB88320^(c>>>1) : c>>>1; t[n]=c>>>0; } return t; })();
+function crc32(u8){ let c = 0xFFFFFFFF; for (let i=0;i<u8.length;i++) c = CRC_T[(c^u8[i])&255]^(c>>>8); return (c^0xFFFFFFFF)>>>0; }
+function zipStore(files){
+  const enc = new TextEncoder(), chunks = [], central = [];
+  let off = 0;
+  for (const f of files){
+    const nm = enc.encode(f.name), data = typeof f.data === 'string' ? enc.encode(f.data) : f.data, crc = crc32(data);
+    const lh = new DataView(new ArrayBuffer(30));
+    lh.setUint32(0,0x04034b50,true); lh.setUint16(4,20,true); lh.setUint16(6,0x0800,true); lh.setUint16(8,0,true);
+    lh.setUint16(10,0,true); lh.setUint16(12,0x0021,true); lh.setUint32(14,crc,true);
+    lh.setUint32(18,data.length,true); lh.setUint32(22,data.length,true); lh.setUint16(26,nm.length,true); lh.setUint16(28,0,true);
+    chunks.push(new Uint8Array(lh.buffer), nm, data);
+    const ch = new DataView(new ArrayBuffer(46));
+    ch.setUint32(0,0x02014b50,true); ch.setUint16(4,20,true); ch.setUint16(6,20,true); ch.setUint16(8,0x0800,true);
+    ch.setUint16(10,0,true); ch.setUint16(12,0,true); ch.setUint16(14,0x0021,true); ch.setUint32(16,crc,true);
+    ch.setUint32(20,data.length,true); ch.setUint32(24,data.length,true); ch.setUint16(28,nm.length,true);
+    ch.setUint32(42,off,true);
+    central.push(new Uint8Array(ch.buffer), nm);
+    off += 30 + nm.length + data.length;
+  }
+  const csize = central.reduce((s,x) => s + x.length, 0);
+  const end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0,0x06054b50,true); end.setUint16(8,files.length,true); end.setUint16(10,files.length,true);
+  end.setUint32(12,csize,true); end.setUint32(16,off,true);
+  return new Blob([...chunks, ...central, new Uint8Array(end.buffer)], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+}
+const colLetter = i => { let s='',n=i+1; while(n>0){ const m=(n-1)%26; s=String.fromCharCode(65+m)+s; n=Math.floor((n-1)/26); } return s; };
+const xesc = s => String(s).replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g,'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+/* 樣式索引：0 一般 1 標題 2 綠 3 紅 4 黃 5 粗體 */
+function sheetXml(sh){
+  const rows = sh.rows, ncol = Math.max(1, ...rows.map(r => r.length));
+  const widths = Array.from({length:ncol}, (_,c) => {
+    let w = 6;
+    for (const r of rows.slice(0,400)){ const x = r[c]; const t = x == null ? '' : String(typeof x === 'object' ? x.v : x);
+      let l = 0; for (const ch of t) l += ch.charCodeAt(0) > 255 ? 2 : 1; w = Math.max(w, l+2); }
+    return Math.min(w, 48);
+  });
+  let x = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0">' +
+    (sh.freeze ? `<pane xSplit="${sh.freeze[0]}" ySplit="${sh.freeze[1]}" topLeftCell="${colLetter(sh.freeze[0])}${sh.freeze[1]+1}" activePane="bottomRight" state="frozen"/>` : '') +
+    '</sheetView></sheetViews><sheetFormatPr defaultRowHeight="15"/><cols>' +
+    widths.map((w,i) => `<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`).join('') + '</cols><sheetData>';
+  rows.forEach((r, ri) => {
+    x += `<row r="${ri+1}">`;
+    r.forEach((c, ci) => {
+      if (c == null || c === '') return;
+      const v = typeof c === 'object' ? c.v : c, s = typeof c === 'object' ? (c.s||0) : 0;
+      const ref = colLetter(ci) + (ri+1);
+      x += typeof v === 'number' && isFinite(v)
+        ? `<c r="${ref}" s="${s}"><v>${v}</v></c>`
+        : `<c r="${ref}" s="${s}" t="inlineStr"><is><t xml:space="preserve">${xesc(v)}</t></is></c>`;
+    });
+    x += '</row>';
+  });
+  x += '</sheetData>' + (sh.filter && rows.length > 1 ? `<autoFilter ref="A1:${colLetter(ncol-1)}${rows.length}"/>` : '') + '</worksheet>';
+  return x;
+}
+function buildXlsx(sheets){
+  const fills = ['FFC6EFCE','FFFFC7CE','FFFFEB9C','FF305496'];
+  const styles = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+<fonts count="3"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts>
+<fills count="6"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill>${fills.map(c => `<fill><patternFill patternType="solid"><fgColor rgb="${c}"/><bgColor indexed="64"/></patternFill></fill>`).join('')}</fills>
+<borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border><left style="thin"><color rgb="FFBFBFBF"/></left><right style="thin"><color rgb="FFBFBFBF"/></right><top style="thin"><color rgb="FFBFBFBF"/></top><bottom style="thin"><color rgb="FFBFBFBF"/></bottom><diagonal/></border></borders>
+<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
+<cellXfs count="6">
+<xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1"/>
+<xf numFmtId="0" fontId="1" fillId="5" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1"/>
+<xf numFmtId="0" fontId="0" fillId="2" borderId="1" xfId="0" applyFill="1" applyBorder="1"/>
+<xf numFmtId="0" fontId="0" fillId="3" borderId="1" xfId="0" applyFill="1" applyBorder="1"/>
+<xf numFmtId="0" fontId="0" fillId="4" borderId="1" xfId="0" applyFill="1" applyBorder="1"/>
+<xf numFmtId="0" fontId="2" fillId="0" borderId="1" xfId="0" applyFont="1" applyBorder="1"/>
+</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`;
+  const NS = 'http://schemas.openxmlformats.org/';
+  const files = [
+    {name:'[Content_Types].xml', data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="${NS}package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>${sheets.map((_,i) => `<Override PartName="/xl/worksheets/sheet${i+1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('')}</Types>`},
+    {name:'_rels/.rels', data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="${NS}package/2006/relationships"><Relationship Id="rId1" Type="${NS}officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`},
+    {name:'xl/workbook.xml', data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="${NS}spreadsheetml/2006/main" xmlns:r="${NS}officeDocument/2006/relationships"><sheets>${sheets.map((s,i) => `<sheet name="${xesc(s.name.replace(/[\\\/?*\[\]:]/g,'_').slice(0,31))}" sheetId="${i+1}" r:id="rId${i+1}"/>`).join('')}</sheets></workbook>`},
+    {name:'xl/_rels/workbook.xml.rels', data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="${NS}package/2006/relationships">${sheets.map((_,i) => `<Relationship Id="rId${i+1}" Type="${NS}officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i+1}.xml"/>`).join('')}<Relationship Id="rId${sheets.length+1}" Type="${NS}officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`},
+    {name:'xl/styles.xml', data:styles},
+    ...sheets.map((s,i) => ({name:`xl/worksheets/sheet${i+1}.xml`, data:sheetXml(s)})),
+  ];
+  return zipStore(files);
+}
+const STY = {plain:0, head:1, add:2, del:3, mod:4, bold:5};
+function exportXlsx(){
+  if (!R) return;
+  const list = $('#expFiltered').checked ? shown : R.entries;
+  const cols = visCols.length ? visCols : COLS;
+  const hdr = ['類別','差異欄位','A 列','B 列', ...cols].map(v => ({v, s:STY.head}));
+  const rows = [hdr];
+  for (const e of list){
+    const base = e.status === 'add' ? STY.add : e.status === 'del' ? STY.del : STY.plain;
+    const line = [{v:LABEL[e.status], s: e.status === 'mod' ? STY.mod : base},
+      {v:e.changes.map(c => c.col).join(', '), s:base},
+      {v:e.a ? e.a.rn : '', s:base}, {v:e.b ? e.b.rn : '', s:base}];
+    for (const c of cols){
+      const ch = e.changes.find(x => x.col === c);
+      if (ch) line.push({v:`${ch.oldV.trim()===''?'(空)':ch.oldV} → ${ch.newV.trim()===''?'(空)':ch.newV}${ch.delta!==null?' ('+fmtDelta(ch.delta)+')':''}`, s:STY.mod});
+      else{
+        const raw = (e.b || e.a).v[c];
+        line.push({v: raw instanceof Date ? cellStr(raw) : (raw == null ? '' : raw), s:base});
+      }
+    }
+    rows.push(line);
+  }
+  const c = R.counts;
+  const sum = [
+    [{v:'項目',s:STY.head},{v:'內容',s:STY.head}],
+    [{v:'Rev A（舊版）',s:STY.bold}, `${S.A.name}　[${S.A.sheet}]　標題列第 ${S.A.hr} 列　${S.A.rows.length} 筆`],
+    [{v:'Rev B（新版）',s:STY.bold}, `${S.B.name}　[${S.B.sheet}]　標題列第 ${S.B.hr} 列　${S.B.rows.length} 筆`],
+    [{v:'Key 欄位',s:STY.bold}, R.keyCols.join(' + ')],
+    [{v:'新增',s:STY.add}, c.add], [{v:'刪除',s:STY.del}, c.del], [{v:'修改',s:STY.mod}, c.mod], [{v:'未變',s:STY.bold}, c.same],
+    [{v:'匯出範圍',s:STY.bold}, $('#expFiltered').checked ? `目前篩選結果（${list.length} 列）` : `全部（${list.length} 列）`],
+    [],[{v:'修改欄位統計',s:STY.head},{v:'次數',s:STY.head}],
+    ...Object.entries(R.colCount).sort((a,b) => b[1]-a[1]).map(([k,v]) => [k, v]),
+    [],[{v:'重複 Key 警告',s:STY.head},{v:'來源 / 數量 / Excel 列',s:STY.head}],
+    ...['A','B'].flatMap(side => R.dups[side].map(d => [d.key, `Rev ${side} × ${d.count}（列 ${d.rns.join(', ')}）`])),
+  ];
+  if (!R.dups.A.length && !R.dups.B.length) sum.push(['（無）','']);
+  const blob = buildXlsx([
+    {name:'比對結果', rows, freeze:[1,1], filter:true},
+    {name:'摘要', rows:sum},
+  ]);
+  const d = new Date(), p = n => String(n).padStart(2,'0');
+  const fn = `compare_result_${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}.xlsx`;
+  if (navigator.msSaveBlob){ navigator.msSaveBlob(blob, fn); return; }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = fn;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { a.remove(); URL.revokeObjectURL(a.href); }, 4000);
+}
+$('#btnExport').addEventListener('click', exportXlsx);
+
+buildSlotUI(S.A); buildSlotUI(S.B);
+</script>
+</body>
+</html>
