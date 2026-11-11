@@ -466,9 +466,12 @@ function buildSlotUI(slot){
   $('#sheet'+slot.id).addEventListener('change', e => { slot.sheet = e.target.value; slot.aoa = null; withBusy(t('readSheet'), () => { parseSlot(slot, true); refresh(); }); });
   $('#hr'+slot.id).addEventListener('change', e => { slot.hr = Math.max(1, parseInt(e.target.value)||1); withBusy(t('readData'), () => { parseSlot(slot, false); refresh(); }); });
 }
-function showMsg(html, err){
-  $('#msg').innerHTML = html ? `<div class="warn ${err?'err':''}">${html}</div>` : '';
+/* 訊息以「產生文字的函式」保存，切換語言時才能用新語言重新產生；傳入空值＝清除 */
+let msgState = null;
+function renderMsg(){
+  $('#msg').innerHTML = msgState ? `<div class="warn ${msgState.err?'err':''}">${msgState.fn()}</div>` : '';
 }
+function showMsg(fn, err){ msgState = fn ? {fn, err} : null; renderMsg(); }
 /* 載入前先看檔案開頭：zip(PK)、舊版 xls(D0CF11E0) 或純文字（csv / xml / 以 xls 命名的 html）才放行 */
 function looksLikeExcel(buf, name){
   const u8 = new Uint8Array(buf, 0, Math.min(buf.byteLength, 2048));
@@ -486,13 +489,13 @@ function looksLikeExcel(buf, name){
 function loadFile(slot, file){
   const rd = new FileReader();
   showBusy(t('readFile', file.name));
-  rd.onerror = () => { hideBusy(); showMsg(t('errRead', esc(file.name)), true); };
+  rd.onerror = () => { hideBusy(); showMsg(() => t('errRead', esc(file.name)), true); };
   rd.onload = async () => {
     await nextPaint();
     try{
-      if (!looksLikeExcel(rd.result, file.name)){ showMsg(t('errNotExcel', esc(file.name)), true); return; }
+      if (!looksLikeExcel(rd.result, file.name)){ showMsg(() => t('errNotExcel', esc(file.name)), true); return; }
       const wb = XLSX.read(new Uint8Array(rd.result), {type:'array', cellDates:true});
-      if (!wb.SheetNames.length) throw new Error(t('errNoSheet'));
+      if (!wb.SheetNames.length) { const er = new Error('no sheets'); er.key = 'errNoSheet'; throw er; };
       slot.wb = wb; slot.name = file.name;
       const other = slot.id === 'A' ? S.B : S.A;
       slot.sheet = (other.wb && wb.SheetNames.includes(other.sheet)) ? other.sheet : wb.SheetNames[0];
@@ -504,7 +507,7 @@ function loadFile(slot, file){
       parseSlot(slot, true);
       refresh();
     }catch(e){
-      showMsg(t('errParse', esc(file.name), esc(e.message||e)), true);
+      showMsg(() => t('errParse', esc(file.name), esc(e.key ? t(e.key) : (e.message||e))), true);
     }finally{ hideBusy(); }
   };
   rd.readAsArrayBuffer(file);
@@ -675,10 +678,10 @@ function refresh(){
 function applyConfig(){
   if (!(S.A.rows && S.B.rows)) return;
   const keyCols = COLS.filter(c => draft.key.has(c));
-  if (!keyCols.length){ showMsg(t('errNeedKey'), true); return; }
-  const miss = [...keyCols.filter(c => !S.A.headers.includes(c)).map(c => `<code>${esc(c)}</code>${t('notInA')}`),
-                ...keyCols.filter(c => !S.B.headers.includes(c)).map(c => `<code>${esc(c)}</code>${t('notInB')}`)];
-  if (miss.length){ showMsg(t('errMissKey', miss.join(t('joiner'))), true); return; }
+  if (!keyCols.length){ showMsg(() => t('errNeedKey'), true); return; }
+  const miss = () => [...keyCols.filter(c => !S.A.headers.includes(c)).map(c => `<code>${esc(c)}</code>${t('notInA')}`),
+                      ...keyCols.filter(c => !S.B.headers.includes(c)).map(c => `<code>${esc(c)}</code>${t('notInB')}`)];
+  if (miss().length){ showMsg(() => t('errMissKey', miss().join(t('joiner'))), true); return; }
   showMsg('');
   withBusy(t('comparing'), () => {
     applied = {key:new Set(draft.key), cmp:new Set([...draft.cmp, ...[...draft.qty].filter(c => !draft.key.has(c))]), qty:new Set(draft.qty)};
@@ -1131,6 +1134,7 @@ function applyLang(){
   updateThemeBtn();
   $('#langCode').textContent = t('langTo'); $('#langBtn').title = t('langTip'); $('#langBtn').setAttribute('aria-label', t('langTip'));
   if ($('#busy').hidden) $('#busyT').textContent = t('busyDefault');
+  renderMsg();
   renderSlotStatic(S.A); renderSlotStatic(S.B);
   if (S.A.rows && S.B.rows) renderCfg();
   if (R){ renderSummary(); renderWarnings(); renderTable(); }

@@ -8,9 +8,8 @@
 
 1. 【使用者】決定專案授權（目前沒有 `LICENSE`，README 的授權章節是刻意刪除的；SheetJS 的授權檔已附）。決定後 Claude 加 `LICENSE` 即可。
 2. 【使用者】可刪除先前為了檢查 github.io 而建立的個人雲端環境 `excel-revdiff-offline`（只多允許 `blex01000001.github.io`）。
-3. 【直接做】切換語言時，頁面上方 `#msg` 的錯誤訊息仍是舊語言：`showMsg()` 改成記住 `{key, args}`，`applyLang()` 時重新產生。
-4. 【先討論】讀檔與比對期間畫面凍結（遮罩動畫會停住）：改用 Web Worker 並回報進度。要保持單一 HTML，需以 Blob URL 建立 worker 並把 SheetJS 一起傳進去；會動到讀檔、`compare()`、狀態傳遞。
-5. 【先討論】沒有自動化測試：目前只靠臨時的 Playwright 腳本。若要放進 repo（例如 `tests/`），會引入 Node／Playwright 開發依賴。
+3. 【先討論】讀檔與比對期間畫面凍結（遮罩動畫會停住）：改用 Web Worker 並回報進度。要保持單一 HTML，需以 Blob URL 建立 worker 並把 SheetJS 一起傳進去；會動到讀檔、`compare()`、狀態傳遞。
+4. 【先討論】沒有自動化測試：目前只靠臨時的 Playwright 腳本。若要放進 repo（例如 `tests/`），會引入 Node／Playwright 開發依賴。
 
 ## 已知問題／限制
 

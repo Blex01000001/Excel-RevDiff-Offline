@@ -75,6 +75,7 @@ node -e "const s=require('fs').readFileSync('index.html','utf8');const i=s.lastI
 - `.card{scroll-margin-top:72px}` — 與固定標題列高度綁在一起 — 改標題列高度時一併調整，否則自動捲動會被擋住。
 - `exportXlsx()` 的數字儲存格 — `sheetXml()` 會略過 `''` 與 `null`、數字才寫成 `<v>` — 想輸出空白用 `''`，不要用 `0`。
 - 搜尋用的 `e.hay` — 狀態文字同時放中英文（`新增 added` …）— 為了切換語言後搜尋仍有效，不要只留一種。
+- `showMsg()` — 要傳「產生文字的函式」（`() => t('key')`），不是字串 — 這樣切換語言時 `renderMsg()` 才能用新語言重新產生；拋出錯誤時用 `err.key` 帶 i18n key，不要把翻譯後的字串放進 `Error`。
 - `refresh()` — 載入／換檔／換工作表會清掉結果與 `applied` — 這是預期行為，使用者要重新按套用；`draft`（勾選）則保留。
 - 預設標題 `Col{n}` — 空白標題的欄名 — 刻意用不翻譯的名稱，避免切換語言後資料鍵改變。
 
