@@ -127,6 +127,12 @@ td.chg .dl{display:inline-block;margin-left:6px;padding:0 5px;border-radius:4px;
 details.warn{padding:8px 12px}
 details.warn>summary{cursor:pointer;font-weight:700;color:inherit}
 details.warn>div,details.warn>ul{margin-top:8px}
+.dlt{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+.dlt.pos{background:var(--add);color:var(--add-t)}
+.dlt.neg{background:var(--del);color:var(--del-t)}
+.dlt.zero,.dlt.na{color:var(--muted);font-weight:400}
+th.dth{cursor:pointer;user-select:none;text-align:right}
+th.dth:hover{color:var(--accent)}
 .ph{color:var(--muted);text-align:center;padding:30px}
 </style>
 </head>
@@ -174,6 +180,12 @@ details.warn>div,details.warn>ul{margin-top:8px}
     <div class="opts" style="margin:0 0 10px">
       <label><input type="checkbox" id="optHideEmpty" checked> 隱藏全空欄位</label>
       <label><input type="checkbox" id="optOnlyDiff"> 只顯示 Key 與有差異的欄位</label>
+    </div>
+    <div class="toolbar" id="dtool" hidden>
+      <b>數量差值</b>
+      <select id="dcol"></select>
+      <div class="chips" id="dmodes"></div>
+      <span class="meta" id="dsum"></span>
     </div>
     <div class="toolbar">
       <div class="chips" id="fchips"></div>
@@ -248,6 +260,9 @@ let R = null;           // 最近一次比對結果
 let shown = [];         // 目前篩選後的 entries
 let visCols = [];       // 目前顯示的欄位
 let statusOn = new Set(['add','del','mod','same']);
+let dFilter = {col:'', mode:'all'};   // 數量差值篩選
+let dSort = {col:'', dir:0};          // 差值排序：1 由小到大、-1 由大到小、0 不排序
+let dispCols = [];                    // 實際顯示的欄位（含差值欄）
 let pageSize = 500;
 
 /* ================= 處理中提示 ================= */
@@ -552,7 +567,7 @@ function compare(A, B, keyCols, cmpCols, qtyCols){
   }
   const mainEntries = [], aMatch = new Map(), delEntries = [];
   const mk = (a, b) => {
-    const e = {a, b, changes: [], status: ''};
+    const e = {a, b, changes: [], status: '', deltas: {}};
     if (a && b){
       e.changes = diffRows(a, b, cmpCols).map(c => {
         const ch = {col:c, oldV:cellStr(a.v[c]), newV:cellStr(b.v[c]), delta:null};
@@ -563,6 +578,11 @@ function compare(A, B, keyCols, cmpCols, qtyCols){
         return ch;
       });
       e.status = e.changes.length ? 'mod' : 'same';
+      e.deltas = {};
+      for (const c of qtyCols){
+        const x = parseNum(a.v[c]), y = parseNum(b.v[c]);
+        e.deltas[c] = (x !== null && y !== null) ? Math.round((y - x) * 1e9) / 1e9 : null;
+      }
     } else e.status = b ? 'add' : 'del';
     return e;
   };
@@ -597,6 +617,7 @@ function compare(A, B, keyCols, cmpCols, qtyCols){
     counts[e.status]++;
     e.hay = [e.status, ...Object.values((e.b||e.a).v).map(normText), ...(e.a ? Object.values(e.a.v).map(normText) : [])].join('\u0001');
     e.hay += '\u0001' + ({add:'新增',del:'刪除',mod:'修改',same:'未變'})[e.status];
+    for (const d of Object.values(e.deltas)) if (d !== null && d !== 0) e.hay += '\u0001' + fmtDelta(d);
     for (const c of e.changes) colCount[c.col] = (colCount[c.col]||0) + 1;
   }
   for (const side of ['A','B']) dups[side].sort((x,y) => y.count - x.count);
@@ -608,6 +629,11 @@ function runCompare(){
   const cmpCols = COLS.filter(c => !applied.key.has(c) && applied.cmp.has(c));
   R = compare(S.A, S.B, keyCols, cmpCols, applied.qty);
   R.keyCols = keyCols; R.cmpCols = cmpCols;
+  R.qtyCols = COLS.filter(c => applied.qty.has(c) && !applied.key.has(c));
+  dFilter = {col: R.qtyCols[0] || '', mode:'all'}; dSort = {col:'', dir:0};
+  $('#dtool').hidden = !R.qtyCols.length;
+  $('#dcol').innerHTML = R.qtyCols.map(c => `<option>${esc(c)}</option>`).join('');
+  $('#dcol').hidden = R.qtyCols.length < 2;
   $('#sumCard').hidden = $('#resCard').hidden = false;
   statusOn = new Set(['add','del','mod','same']); pageSize = 500;
   renderSummary(); renderWarnings(); renderTable();
@@ -672,8 +698,58 @@ $('#q').addEventListener('input', () => { pageSize = 500; renderTable(); });
 
 function filteredEntries(){
   const terms = normText($('#q').value).split(' ').filter(Boolean);
-  return R.entries.filter(e => statusOn.has(e.status) && terms.every(t => e.hay.includes(t)));
+  let list = R.entries.filter(e => statusOn.has(e.status) && terms.every(t => e.hay.includes(t)));
+  const col = dFilter.col, m = dFilter.mode;
+  if (col && m !== 'all'){
+    const ok = {inc: d => d !== null && d > 0, dec: d => d !== null && d < 0,
+                chg: d => d !== null && d !== 0, zero: d => d === 0};
+    list = list.filter(e => ok[m](e.deltas[col] === undefined ? null : e.deltas[col]));
+  }
+  if (dSort.dir && dSort.col){
+    const c = dSort.col, dir = dSort.dir;
+    const val = e => e.deltas[c] === undefined ? null : e.deltas[c];
+    list = list.map((e,i) => [e,i]).sort((x,y) => {
+      const a = val(x[0]), b = val(y[0]);
+      if (a === null && b === null) return x[1]-y[1];
+      if (a === null) return 1; if (b === null) return -1;
+      return (a-b)*dir || x[1]-y[1];
+    }).map(x => x[0]);
+  }
+  return list;
 }
+function computeDispCols(vis){
+  const out = [];
+  for (const c of vis){
+    out.push({label:c, col:c, delta:false});
+    if (R.qtyCols.includes(c)) out.push({label:c + ' 差值', col:c, delta:true});
+  }
+  return out;
+}
+function deltaCell(e, c){
+  if (e.status === 'add' || e.status === 'del') return '<td class="dlt na">—</td>';
+  const d = e.deltas[c];
+  if (d === null || d === undefined) return '<td class="dlt na"></td>';
+  return `<td class="dlt ${d > 0 ? 'pos' : d < 0 ? 'neg' : 'zero'}">${d === 0 ? '0' : fmtDelta(d)}</td>`;
+}
+const D_MODES = [['all','全部'],['inc','增加 (+)'],['dec','減少 (−)'],['chg','有變動'],['zero','無變動']];
+function renderDeltaTool(){
+  if ($('#dtool').hidden) return;
+  $('#dmodes').innerHTML = D_MODES.map(([k,n]) => `<button class="fchip all ${dFilter.mode===k?'on':''}" data-d="${k}">${n}</button>`).join('');
+  const c = dFilter.col; let sum = 0, inc = 0, dec = 0;
+  for (const e of shown){ const d = e.deltas[c]; if (d == null) continue; sum += d; if (d > 0) inc++; else if (d < 0) dec++; }
+  $('#dsum').textContent = `目前顯示的列：差值合計 ${fmtDelta(sum)}（增加 ${inc} 列、減少 ${dec} 列）`;
+}
+$('#dmodes').addEventListener('click', e => {
+  const m = e.target.dataset && e.target.dataset.d; if (!m) return;
+  dFilter.mode = m; pageSize = 500; renderTable();
+});
+$('#dcol').addEventListener('change', e => { dFilter.col = e.target.value; pageSize = 500; renderTable(); });
+$('#tw').addEventListener('click', e => {
+  const th = e.target.closest('th[data-sort]'); if (!th) return;
+  const c = th.dataset.sort;
+  dSort = dSort.col === c ? {col:c, dir: dSort.dir === -1 ? 1 : (dSort.dir === 1 ? 0 : -1)} : {col:c, dir:-1};
+  renderTable();
+});
 function computeVisCols(list){
   let cols = COLS.slice();
   if ($('#optHideEmpty').checked)
@@ -695,13 +771,17 @@ function renderTable(){
   renderFilterChips();
   shown = filteredEntries();
   visCols = computeVisCols(shown);
+  dispCols = computeDispCols(visCols);
   $('#cnt').textContent = `顯示 ${shown.length} / ${R.entries.length} 列`;
   $('#btnExport').disabled = !R.entries.length;
-  const head = `<tr><th class="cat">類別</th><th>差異欄位</th><th>A 列</th><th>B 列</th>${visCols.map(c => `<th class="${R.keyCols.includes(c)?'key':''}">${esc(c)}</th>`).join('')}</tr>`;
+  renderDeltaTool();
+  const head = `<tr><th class="cat">類別</th><th>差異欄位</th><th>A 列</th><th>B 列</th>${dispCols.map(d => d.delta
+    ? `<th class="dth" data-sort="${esc(d.col)}" title="點擊排序（由大到小 → 由小到大 → 取消）">${esc(d.label)} ${dSort.col===d.col ? (dSort.dir===-1?'▼':dSort.dir===1?'▲':'⇅') : '⇅'}</th>`
+    : `<th class="${R.keyCols.includes(d.col)?'key':''}">${esc(d.label)}</th>`).join('')}</tr>`;
   const part = shown.slice(0, pageSize);
   const body = part.map(e => `<tr class="${e.status}"><td class="cat">${LABEL[e.status]}</td>
     <td>${esc(e.changes.map(x=>x.col).join(', '))}</td><td class="rn">${e.a?e.a.rn:''}</td><td class="rn">${e.b?e.b.rn:''}</td>
-    ${visCols.map(c => cellHTML(e,c)).join('')}</tr>`).join('');
+    ${dispCols.map(d => d.delta ? deltaCell(e, d.col) : cellHTML(e, d.col)).join('')}</tr>`).join('');
   $('#tw').innerHTML = shown.length
     ? `<table><thead>${head}</thead><tbody>${body}</tbody></table>` +
       (shown.length > pageSize ? `<div class="more"><button class="fchip" id="btnMore">再載入 500 列（尚有 ${shown.length-pageSize} 列）</button></div>` : '')
@@ -796,15 +876,21 @@ const STY = {plain:0, head:1, add:2, del:3, mod:4, bold:5};
 function exportXlsx(){
   if (!R) return;
   const list = $('#expFiltered').checked ? shown : R.entries;
-  const cols = visCols.length ? visCols : COLS;
-  const hdr = ['類別','差異欄位','A 列','B 列', ...cols].map(v => ({v, s:STY.head}));
+  const cols = dispCols.length ? dispCols : COLS.map(c => ({label:c, col:c, delta:false}));
+  const hdr = ['類別','差異欄位','A 列','B 列', ...cols.map(d => d.label)].map(v => ({v, s:STY.head}));
   const rows = [hdr];
   for (const e of list){
     const base = e.status === 'add' ? STY.add : e.status === 'del' ? STY.del : STY.plain;
     const line = [{v:LABEL[e.status], s: e.status === 'mod' ? STY.mod : base},
       {v:e.changes.map(c => c.col).join(', '), s:base},
       {v:e.a ? e.a.rn : '', s:base}, {v:e.b ? e.b.rn : '', s:base}];
-    for (const c of cols){
+    for (const d of cols){
+      const c = d.col;
+      if (d.delta){   // 差值欄：輸出成數字，方便在 Excel 內篩選 / 排序 / 加總
+        const dv = (e.status === 'add' || e.status === 'del') ? null : e.deltas[c];
+        line.push({v: dv == null ? '' : dv, s: dv > 0 ? STY.add : dv < 0 ? STY.del : base});
+        continue;
+      }
       const ch = e.changes.find(x => x.col === c);
       if (ch) line.push({v:`${ch.oldV.trim()===''?'(空)':ch.oldV} → ${ch.newV.trim()===''?'(空)':ch.newV}${ch.delta!==null?' ('+fmtDelta(ch.delta)+')':''}`, s:STY.mod});
       else{
