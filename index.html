@@ -297,8 +297,8 @@ function buildSlotUI(slot){
   const el = document.createElement('div');
   el.innerHTML = `
     <label class="drop" id="drop${slot.id}">
-      <input type="file" accept=".xlsx,.xlsm,.xls" id="file${slot.id}">
-      <b>${slot.label}</b><br>點擊選擇檔案，或把 .xlsx 拖曳到這裡
+      <input type="file" accept=".xlsx,.xlsm,.xlsb,.xls,.ods,.csv" id="file${slot.id}">
+      <b>${slot.label}</b><br>點擊選擇檔案，或把 Excel 檔拖曳到這裡<br><small>支援 .xlsx .xlsm .xlsb .xls .ods .csv</small>
     </label>
     <div class="finfo" id="info${slot.id}" hidden>
       <span id="fname${slot.id}" style="font-weight:600"></span>
