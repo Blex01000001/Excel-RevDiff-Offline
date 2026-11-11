@@ -13,6 +13,7 @@
 | `src/build.py` | 把 SheetJS 與版本號塞進 template，輸出 `index.html` |
 | `src/VERSION` | 版本號（顯示在標題旁），建置時注入 |
 | `src/xlsx.core.min.js` | SheetJS Community 0.18.5（原樣內嵌，不要改）；授權見 `THIRD-PARTY-SheetJS-LICENSE.txt` |
+| `LICENSE` | MIT 授權（含 SheetJS 的第三方聲明）；README 刻意不放授權章節，GitHub 會自動顯示 |
 | `README.md` | 給第一次使用者看的中英文簡介（功能、用法、格式、注意事項） |
 | `docs/TODO.md` | 目前狀態：待辦、已知問題、想法；每次 commit 時同步更新 |
 | `samples/demo_RevA.xlsx`、`demo_RevB.xlsx` | 假資料範例，用來做驗證（Key＝`SKU`） |

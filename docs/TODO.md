@@ -6,9 +6,8 @@
 
 ## 待辦
 
-1. 【使用者】決定專案授權（目前沒有 `LICENSE`，README 的授權章節是刻意刪除的；SheetJS 的授權檔已附）。決定後 Claude 加 `LICENSE` 即可。
-2. 【使用者】可刪除先前為了檢查 github.io 而建立的個人雲端環境 `excel-revdiff-offline`（只多允許 `blex01000001.github.io`）。
-3. 【先討論】沒有自動化測試：目前只靠臨時的 Playwright 腳本。若要放進 repo（例如 `tests/`），會引入 Node／Playwright 開發依賴。
+1. 【使用者】可刪除先前為了檢查 github.io 而建立的個人雲端環境 `excel-revdiff-offline`（只多允許 `blex01000001.github.io`）。
+2. 【先討論】沒有自動化測試：目前只靠臨時的 Playwright 腳本。若要放進 repo（例如 `tests/`），會引入 Node／Playwright 開發依賴。
 
 ## 已知問題／限制
 
