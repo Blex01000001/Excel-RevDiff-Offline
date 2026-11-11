@@ -6,15 +6,12 @@
 
 ## 待辦
 
-1. 【使用者】用真實資料（約 3 萬列對 5 萬列）驗證結果與速度，回報「建議 Key」是否合理、有無誤判；驗證後決定版本號（目前 `v1.0.0`，若想保守可改成 `0.9.0`，只需改 `src/VERSION` 再 `python3 src/build.py`）。
-2. 【使用者】請外籍工程師看一遍英文介面用詞；要改的字都在 `src/template.html` 的 `I18N.en`。
-3. 【使用者】在公司實際使用的瀏覽器確認：能開啟、匯出能下載，且匯出檔在公司的 Excel 版本能正確顯示顏色與篩選（目前只在 Chromium + openpyxl 驗證，沒用真正的 Microsoft Excel 開過）。
-4. 【使用者】決定專案授權（目前沒有 `LICENSE`，README 的授權章節是刻意刪除的；SheetJS 的授權檔已附）。決定後 Claude 加 `LICENSE` 即可。
-5. 【使用者】可刪除先前為了檢查 github.io 而建立的個人雲端環境 `excel-revdiff-offline`（只多允許 `blex01000001.github.io`）。
-6. 【直接做】載入「不是 Excel」的檔案時不會報錯（SheetJS 會把它當純文字解析成一欄）：在 `loadFile()` 檢查檔案開頭（xlsx/xlsm 是 `PK`、xls 是 `D0CF11E0`、xlsb 同 `PK`），或解析後檢查是否有有效資料，並顯示「不是有效的 Excel 檔」（新增 `I18N` 中英兩條）。csv／ods／xml 要放行，別擋掉。
-7. 【直接做】切換語言時，頁面上方 `#msg` 的錯誤訊息仍是舊語言：`showMsg()` 改成記住 `{key, args}`，`applyLang()` 時重新產生。
-8. 【先討論】讀檔與比對期間畫面凍結（遮罩動畫會停住）：改用 Web Worker 並回報進度。要保持單一 HTML，需以 Blob URL 建立 worker 並把 SheetJS 一起傳進去；會動到讀檔、`compare()`、狀態傳遞。
-9. 【先討論】沒有自動化測試：目前只靠臨時的 Playwright 腳本。若要放進 repo（例如 `tests/`），會引入 Node／Playwright 開發依賴。
+1. 【使用者】決定專案授權（目前沒有 `LICENSE`，README 的授權章節是刻意刪除的；SheetJS 的授權檔已附）。決定後 Claude 加 `LICENSE` 即可。
+2. 【使用者】可刪除先前為了檢查 github.io 而建立的個人雲端環境 `excel-revdiff-offline`（只多允許 `blex01000001.github.io`）。
+3. 【直接做】載入「不是 Excel」的檔案時不會報錯（SheetJS 會把它當純文字解析成一欄）：在 `loadFile()` 檢查檔案開頭（xlsx/xlsm 是 `PK`、xls 是 `D0CF11E0`、xlsb 同 `PK`），或解析後檢查是否有有效資料，並顯示「不是有效的 Excel 檔」（新增 `I18N` 中英兩條）。csv／ods／xml 要放行，別擋掉。
+4. 【直接做】切換語言時，頁面上方 `#msg` 的錯誤訊息仍是舊語言：`showMsg()` 改成記住 `{key, args}`，`applyLang()` 時重新產生。
+5. 【先討論】讀檔與比對期間畫面凍結（遮罩動畫會停住）：改用 Web Worker 並回報進度。要保持單一 HTML，需以 Blob URL 建立 worker 並把 SheetJS 一起傳進去；會動到讀檔、`compare()`、狀態傳遞。
+6. 【先討論】沒有自動化測試：目前只靠臨時的 Playwright 腳本。若要放進 repo（例如 `tests/`），會引入 Node／Playwright 開發依賴。
 
 ## 已知問題／限制
 
@@ -27,7 +24,7 @@
 - 空白標題的欄位名稱固定為 `Col{n}`（不翻譯，因為欄名同時是資料鍵）。
 - 標題列自動偵測只看前 30 列；日期以 `yyyy-mm-dd` 字串比對。
 - 匯出檔名刻意用英文（`compare_result_日期_時間.xlsx`），因為 headless Chromium 下中文檔名會失效。
-- 只在 Chromium 測過；舊瀏覽器（例如 IE）不支援 SVG 頁籤圖示與部分語法。
+- 舊瀏覽器（例如 IE）不支援 SVG 頁籤圖示與部分語法。
 
 ## 想法
 
