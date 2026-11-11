@@ -96,6 +96,34 @@ td.chg .dl{display:inline-block;margin-left:6px;padding:0 5px;border-radius:4px;
 #busy .bar{height:4px;margin-top:14px;border-radius:2px;background:var(--line);overflow:hidden;position:relative}
 #busy .bar i{position:absolute;inset:0 auto 0 0;width:35%;background:var(--accent);animation:slide 1.1s ease-in-out infinite alternate}
 @keyframes slide{to{left:65%}}
+.legend{display:flex;flex-wrap:wrap;gap:4px 22px;color:var(--muted);font-size:12.5px;margin-bottom:10px}
+.legend b{color:var(--text)}
+.cfgbar{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
+.cfgbar input[type=search]{width:220px}
+.btn{border:1px solid var(--line);border-radius:6px;padding:4px 12px;cursor:pointer;background:var(--panel);color:var(--text);font:inherit;font-size:13px}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.cfgwrap{max-height:380px;overflow:auto;border:1px solid var(--line);border-radius:8px}
+.cfgt{width:100%;border-collapse:separate;border-spacing:0}
+.cfgt th{position:sticky;top:0;background:var(--panel);z-index:2;padding:6px 10px;border-bottom:2px solid var(--line);text-align:center;white-space:nowrap}
+.cfgt th.l,.cfgt td.l{text-align:left}
+.cfgt td{padding:4px 10px;border-bottom:1px solid var(--line);text-align:center}
+.cfgt tbody tr:hover td{background:rgba(127,127,127,.08)}
+.cfgt tr.iskey td{background:var(--accent-soft)}
+.cfgt td.nm{font-weight:600;white-space:nowrap}
+.cfgt td.smp{color:var(--muted);max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:ui-monospace,Consolas,monospace;font-size:12px}
+.cfgt input[type=checkbox]{width:16px;height:16px;cursor:pointer;vertical-align:middle}
+.cfgt input:disabled{cursor:not-allowed;opacity:.35}
+.cfgt .tag{font-weight:400;font-size:11px;color:var(--mod-t);background:var(--mod);border-radius:4px;padding:0 5px;margin-left:6px}
+.mini{display:block;font-weight:400;font-size:11px;margin-top:2px}
+.mini a{cursor:pointer;color:var(--accent);margin:0 4px;text-decoration:underline}
+.applybar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.cfgstatus{flex:1;min-width:240px;font-size:13px}
+.pend{font-size:13px;font-weight:600;color:var(--mod-t);background:var(--mod);border-radius:6px;padding:2px 10px}
+.pend:empty{display:none}
+#warns{display:flex;flex-direction:column;gap:6px}
+details.warn{padding:8px 12px}
+details.warn>summary{cursor:pointer;font-weight:700;color:inherit}
+details.warn>div,details.warn>ul{margin-top:8px}
 .ph{color:var(--muted);text-align:center;padding:30px}
 </style>
 </head>
@@ -109,17 +137,21 @@ td.chg .dl{display:inline-block;margin-left:6px;padding:0 5px;border-radius:4px;
 
   <section class="card" id="cfgCard" hidden>
     <h2>② 比對設定</h2>
-    <div><b>Key 欄位</b>（勾選的欄位組合成唯一 Key）</div>
-    <div class="chips" id="keyChips" style="margin-top:6px"></div>
-    <p class="hint" id="keyHint"></p>
-    <details>
-      <summary>進階：選擇要比對的欄位 / 數量欄（顯示差值）</summary>
-      <div class="hint">「比對」取消勾選＝忽略該欄的差異；「數量」勾選＝該欄變動時顯示差值（如 12 → 15，+3）。</div>
-      <div class="colgrid" id="colGrid"></div>
-    </details>
-    <div class="opts">
-      <label><input type="checkbox" id="optHideEmpty" checked> 隱藏全空欄位</label>
-      <label><input type="checkbox" id="optOnlyDiff"> 只顯示 Key 與有差異的欄位</label>
+    <div class="legend">
+      <span><b>Key</b>：用來配對新舊兩列的欄位組合（可多選）</span>
+      <span><b>比對</b>：要檢查是否被修改的欄位（不勾＝忽略該欄差異）</span>
+      <span><b>數量</b>：該欄變動時顯示差值（如 12 → 15，+3）</span>
+    </div>
+    <div class="cfgbar">
+      <input type="search" id="colFilter" placeholder="搜尋欄位名稱">
+      <button class="btn" id="btnSuggest" title="依欄位名稱或資料內容，幫你勾選可能的 Key">建議 Key</button>
+      <button class="btn" id="btnReset">全部清除</button>
+    </div>
+    <div class="cfgwrap" id="cfgTable"></div>
+    <div class="applybar">
+      <div id="cfgStatus" class="cfgstatus"></div>
+      <span class="pend" id="pend"></span>
+      <button class="primary" id="btnApply">套用並開始比對</button>
     </div>
     <p class="hint">比對前正規化：去除前後空白、全形轉半形、忽略大小寫、數字 10 與 10.0 視為相同（有前置 0 的代碼如 007 不會被當成數字）。</p>
   </section>
@@ -136,6 +168,10 @@ td.chg .dl{display:inline-block;margin-left:6px;padding:0 5px;border-radius:4px;
 
   <section class="card" id="resCard" hidden>
     <h2>④ 比對結果</h2>
+    <div class="opts" style="margin:0 0 10px">
+      <label><input type="checkbox" id="optHideEmpty" checked> 隱藏全空欄位</label>
+      <label><input type="checkbox" id="optOnlyDiff"> 只顯示 Key 與有差異的欄位</label>
+    </div>
     <div class="toolbar">
       <div class="chips" id="fchips"></div>
       <input type="search" id="q" placeholder="搜尋任何欄位（可用空白分隔多個關鍵字）">
@@ -217,7 +253,9 @@ const S = {
   A:{id:'A', label:'Rev A（舊版）', wb:null, name:'', sheet:'', hr:1, aoa:null, off:0, headers:[], rows:null},
   B:{id:'B', label:'Rev B（新版）', wb:null, name:'', sheet:'', hr:1, aoa:null, off:0, headers:[], rows:null},
 };
-const cfg = { key:new Set(), cmp:new Set(), qty:new Set(), seen:new Set(), keyTouched:false };
+const draft = { key:new Set(), cmp:new Set(), qty:new Set() };   // 使用者正在編輯的設定
+let applied = null;                                            // 已套用（比對結果所依據）的設定
+let colFilter = '';
 let COLS = [];          // 兩檔欄位聯集
 let R = null;           // 最近一次比對結果
 let shown = [];         // 目前篩選後的 entries
@@ -330,16 +368,6 @@ function parseSlot(slot, autoHeader){
 function syncColumns(){
   const a = S.A.headers || [], b = S.B.headers || [];
   COLS = [...a, ...b.filter(x => !a.includes(x))];
-  COLS.forEach(c => {
-    if (cfg.seen.has(c)) return;
-    cfg.seen.add(c);
-    cfg.cmp.add(c);
-    if (/^(qty|quantity|數量)$/i.test(c)) cfg.qty.add(c);
-  });
-  // 兩個檔案都載入後，在使用者還沒手動調整 Key 之前，自動建議 Key
-  if (S.A.rows && S.B.rows && !cfg.keyTouched){
-    cfg.key = new Set(suggestKey());
-  }
 }
 /* 依欄位名稱找常見的識別欄位；找不到時用資料挑出「最能區分每一列」的欄位組合 */
 const KEY_NAME_RE = [/^line\s*(no|number|#)?\.?$/i, /ident.?code|item.?code|part.?(no|number)|^item$|^sku$|^id$/i, /^size/i, /編號|料號|品號|代碼|代號/];
@@ -366,33 +394,102 @@ function suggestKey(){
   }
   return chosen.length ? chosen : (COLS.length ? [COLS[0]] : []);
 }
+const sampleCache = new Map();
+function sampleOf(c){
+  if (sampleCache.has(c)) return sampleCache.get(c);
+  let v = '';
+  for (const slot of [S.B, S.A]){
+    for (let i = 0; i < Math.min(slot.rows.length, 500) && !v; i++) v = cellStr(slot.rows[i].v[c]).trim();
+    if (v) break;
+  }
+  sampleCache.set(c, v); return v;
+}
+const sameSet = (x, y) => x.size === y.size && [...x].every(v => y.has(v));
 function renderCfg(){
   $('#cfgCard').hidden = !(S.A.rows && S.B.rows);
-  $('#keyChips').innerHTML = COLS.map(c => `<span class="chip ${cfg.key.has(c)?'on':''}" data-c="${esc(c)}">${esc(c)}</span>`).join('');
-  $('#colGrid').innerHTML = COLS.map(c => `<div class="r"><b title="${esc(c)}">${esc(c)}</b>
-    <label><input type="checkbox" data-k="cmp" data-c="${esc(c)}" ${cfg.cmp.has(c)?'checked':''} ${cfg.key.has(c)?'disabled':''}> 比對</label>
-    <label><input type="checkbox" data-k="qty" data-c="${esc(c)}" ${cfg.qty.has(c)?'checked':''}> 數量</label></div>`).join('');
-  const ks = COLS.filter(c => cfg.key.has(c));
-  $('#keyHint').innerHTML = ks.length ? `目前 Key ＝ <code>${ks.map(esc).join(' + ')}</code>${cfg.keyTouched ? '' : '　（依欄位名稱 / 資料自動建議，請確認是否正確）'}` : '⚠ 請至少選擇一個 Key 欄位';
+  if ($('#cfgCard').hidden) return;
+  const wrap = $('#cfgTable'), top = wrap.scrollTop;
+  const q = normText(colFilter);
+  const list = COLS.filter(c => !q || normText(c).includes(q));
+  const mini = k => `<span class="mini"><a data-act="all" data-k="${k}">全選</a><a data-act="none" data-k="${k}">清除</a></span>`;
+  const rows = list.map(c => {
+    const onlyA = !S.B.headers.includes(c), onlyB = !S.A.headers.includes(c);
+    const key = draft.key.has(c);
+    return `<tr class="${key?'iskey':''}" data-row="${esc(c)}">
+      <td class="nm l">${esc(c)}${onlyA?'<span class="tag">僅 Rev A</span>':''}${onlyB?'<span class="tag">僅 Rev B</span>':''}</td>
+      <td class="smp l" title="${esc(sampleOf(c))}">${esc(sampleOf(c))}</td>
+      <td><input type="checkbox" data-k="key" data-c="${esc(c)}" ${key?'checked':''}></td>
+      <td><input type="checkbox" data-k="cmp" data-c="${esc(c)}" ${!key&&draft.cmp.has(c)?'checked':''} ${key?'disabled':''}></td>
+      <td><input type="checkbox" data-k="qty" data-c="${esc(c)}" ${draft.qty.has(c)?'checked':''}></td></tr>`;
+  }).join('');
+  wrap.innerHTML = `<table class="cfgt"><thead><tr><th class="l">欄位</th><th class="l">範例值</th>
+    <th>Key${mini('key')}</th><th>比對${mini('cmp')}</th><th>數量${mini('qty')}</th></tr></thead>
+    <tbody>${rows || '<tr><td colspan="5" class="ph">沒有符合的欄位</td></tr>'}</tbody></table>`;
+  wrap.scrollTop = top;
+  updateCfgStatus();
 }
-$('#keyChips').addEventListener('click', e => {
-  const c = e.target.dataset && e.target.dataset.c; if (c === undefined) return;
-  cfg.keyTouched = true;
-  cfg.key.has(c) ? cfg.key.delete(c) : cfg.key.add(c);
-  withBusy('比對中…', () => refresh(true));
+/* 只更新狀態列與「尚未套用」提示，不重畫表格（保留捲動位置） */
+function updateCfgStatus(){
+  const ks = COLS.filter(c => draft.key.has(c));
+  const nc = COLS.filter(c => !draft.key.has(c) && draft.cmp.has(c)).length, nq = COLS.filter(c => draft.qty.has(c)).length;
+  $('#cfgStatus').innerHTML =
+    `已選 Key <b>${ks.length}</b> 欄${ks.length ? '：<code>' + ks.map(esc).join(' + ') + '</code>' : '（請至少選一個）'}　比對 <b>${nc}</b> 欄　數量 <b>${nq}</b> 欄` +
+    (ks.length && !nc ? '<br><span style="color:var(--mod-t)">⚠ 尚未勾選任何比對欄位，只會判斷新增 / 刪除，不會偵測修改</span>' : '');
+  $('#btnApply').disabled = !ks.length;
+  const dirty = !applied || !(sameSet(applied.key, draft.key) && sameSet(applied.cmp, draft.cmp) && sameSet(applied.qty, draft.qty));
+  $('#pend').textContent = !(S.A.rows && S.B.rows) ? '' : (!applied ? '尚未比對' : (dirty ? '● 設定已變更，尚未套用' : ''));
+}
+$('#cfgTable').addEventListener('change', e => {
+  const t = e.target; if (!t.dataset || !t.dataset.k) return;
+  t.checked ? draft[t.dataset.k].add(t.dataset.c) : draft[t.dataset.k].delete(t.dataset.c);
+  if (t.dataset.k === 'key'){
+    const tr = t.closest('tr'); tr.classList.toggle('iskey', t.checked);
+    const cb = tr.querySelector('input[data-k="cmp"]');
+    cb.disabled = t.checked; cb.checked = !t.checked && draft.cmp.has(t.dataset.c);
+  }
+  updateCfgStatus();
 });
-$('#colGrid').addEventListener('change', e => {
-  const t = e.target; if (!t.dataset.k) return;
-  const set = cfg[t.dataset.k];
-  t.checked ? set.add(t.dataset.c) : set.delete(t.dataset.c);
-  withBusy('比對中…', runCompare);
+$('#cfgTable').addEventListener('click', e => {
+  const a = e.target.closest('a[data-act]'); if (!a) return;
+  const k = a.dataset.k, q = normText(colFilter);
+  for (const c of COLS.filter(c => !q || normText(c).includes(q))){
+    if (a.dataset.act === 'all'){ if (k !== 'cmp' || !draft.key.has(c)) draft[k].add(c); }
+    else draft[k].delete(c);
+  }
+  renderCfg();
+});
+$('#colFilter').addEventListener('input', e => { colFilter = e.target.value; renderCfg(); });
+$('#btnSuggest').addEventListener('click', () => {
+  draft.key = new Set(suggestKey()); renderCfg();
+});
+$('#btnReset').addEventListener('click', () => {
+  draft.key.clear(); draft.cmp.clear(); draft.qty.clear(); renderCfg();
 });
 ['optHideEmpty','optOnlyDiff'].forEach(id => $('#'+id).addEventListener('change', renderTable));
+$('#btnApply').addEventListener('click', applyConfig);
 
-function refresh(skipSync){
-  if (!skipSync) syncColumns();
+/* 載入 / 變更檔案後：清掉舊結果，讓使用者重新設定並按「套用」 */
+function refresh(){
+  syncColumns();
+  sampleCache.clear();
+  applied = null; R = null;
+  $('#sumCard').hidden = $('#resCard').hidden = true;
+  $('#warns').innerHTML = '';
   renderCfg();
-  runCompare();
+}
+function applyConfig(){
+  if (!(S.A.rows && S.B.rows)) return;
+  const keyCols = COLS.filter(c => draft.key.has(c));
+  if (!keyCols.length){ showMsg('請至少選擇一個 Key 欄位。', true); return; }
+  const miss = [...keyCols.filter(c => !S.A.headers.includes(c)).map(c => `<code>${esc(c)}</code>（Rev A 沒有）`),
+                ...keyCols.filter(c => !S.B.headers.includes(c)).map(c => `<code>${esc(c)}</code>（Rev B 沒有）`)];
+  if (miss.length){ showMsg(`Key 欄位 ${miss.join('、')}，請調整 Key 或標題列。`, true); return; }
+  showMsg('');
+  withBusy('比對中…', () => {
+    applied = {key:new Set(draft.key), cmp:new Set(draft.cmp), qty:new Set(draft.qty)};
+    runCompare();
+    updateCfgStatus();
+  }).then(() => { $('#sumCard').scrollIntoView({behavior:'smooth', block:'start'}); });
 }
 
 /* ================= 比對核心 ================= */
@@ -510,24 +607,12 @@ function compare(A, B, keyCols, cmpCols, qtyCols){
 }
 
 function runCompare(){
-  const ok = S.A.rows && S.B.rows;
-  $('#sumCard').hidden = $('#resCard').hidden = !ok;
-  $('#warns').innerHTML = '';
-  if (!ok){ R = null; return; }
-  const keyCols = COLS.filter(c => cfg.key.has(c));
-  if (!keyCols.length){
-    showMsg('請至少選擇一個 Key 欄位。', true);
-    $('#sumCard').hidden = $('#resCard').hidden = true; R = null; return;
-  }
-  const missA = keyCols.filter(c => !S.A.headers.includes(c)), missB = keyCols.filter(c => !S.B.headers.includes(c));
-  if (missA.length || missB.length){
-    showMsg(`Key 欄位 ${[...missA.map(c=>'<code>'+esc(c)+'</code>（Rev A 沒有）'), ...missB.map(c=>'<code>'+esc(c)+'</code>（Rev B 沒有）')].join('、')}，請調整 Key 或標題列。`, true);
-    $('#sumCard').hidden = $('#resCard').hidden = true; R = null; return;
-  }
-  showMsg('');
-  const cmpCols = COLS.filter(c => !cfg.key.has(c) && cfg.cmp.has(c));
-  R = compare(S.A, S.B, keyCols, cmpCols, cfg.qty);
+  const keyCols = COLS.filter(c => applied.key.has(c));
+  const cmpCols = COLS.filter(c => !applied.key.has(c) && applied.cmp.has(c));
+  R = compare(S.A, S.B, keyCols, cmpCols, applied.qty);
   R.keyCols = keyCols; R.cmpCols = cmpCols;
+  $('#sumCard').hidden = $('#resCard').hidden = false;
+  statusOn = new Set(['add','del','mod','same']); pageSize = 500;
   renderSummary(); renderWarnings(); renderTable();
 }
 
@@ -552,22 +637,22 @@ function renderWarnings(){
     const d = R.dups[side];
     if (!d.length) continue;
     const rows = d.reduce((s,x) => s + x.count, 0);
-    w.push(`<div class="warn"><h3>⚠ ${S[side].label} 有 ${d.length} 組重複 Key（共 ${rows} 列）</h3>
+    w.push(`<details class="warn"><summary>⚠ ${S[side].label} 有 ${d.length} 組重複 Key（共 ${rows} 列）<span style="font-weight:400">　點擊展開明細</span></summary>
       <div>同一檔案內 Key 相同的列不會被略過：會與另一檔的同 Key 列依「差異最少」優先一對一配對，多出來的列計為新增 / 刪除。建議把更多欄位勾進 Key 以降低重複。</div>
-      <ul>${d.slice(0,200).map(x => `<li><code>${esc(x.key)}</code> × ${x.count}　（Excel 列 ${x.rns.slice(0,12).join(', ')}${x.rns.length>12?' …共 '+x.rns.length+' 列':''}）</li>`).join('')}${d.length>200?`<li>…另有 ${d.length-200} 組</li>`:''}</ul></div>`);
+      <ul>${d.slice(0,200).map(x => `<li><code>${esc(x.key)}</code> × ${x.count}　（Excel 列 ${x.rns.slice(0,12).join(', ')}${x.rns.length>12?' …共 '+x.rns.length+' 列':''}）</li>`).join('')}${d.length>200?`<li>…另有 ${d.length-200} 組</li>`:''}</ul></details>`);
   }
   const tot = {A:S.A.rows.length, B:S.B.rows.length};
   const low = ['A','B'].filter(side => tot[side] && R.dups[side].reduce((n,x) => n + x.count, 0) / tot[side] > 0.2);
   if (low.length || R.byOrder)
-    w.unshift(`<div class="warn err"><h3>⚠ 目前的 Key 區分度太低，比對結果不可靠</h3>
+    w.unshift(`<details class="warn err"><summary>⚠ 目前的 Key 區分度太低，比對結果不可靠<span style="font-weight:400">　點擊展開說明</span></summary>
       <div>${low.map(x => S[x].label).join('、') || '部分資料'}有大量列的 Key 相同。${R.byOrder ? `其中 <b>${R.byOrder}</b> 列因同 Key 數量過多，只能依出現順序配對，修改與新增 / 刪除的判斷可能不準。` : ''}
-      請在上方「Key 欄位」多勾選幾個能唯一識別一列的欄位（例如編號、代碼、尺寸、序號等），讓重複的組數降到最低。</div></div>`);
+      請在上方「比對設定」多勾選幾個能唯一識別一列的 Key 欄位（例如編號、代碼、尺寸、序號等），再按「套用並開始比對」。</div></details>`);
   const onlyA = S.A.headers.filter(c => !S.B.headers.includes(c)), onlyB = S.B.headers.filter(c => !S.A.headers.includes(c));
   if (onlyA.length || onlyB.length)
-    w.push(`<div class="warn"><h3>⚠ 兩檔欄位不完全相同</h3>
+    w.push(`<details class="warn"><summary>⚠ 兩檔欄位不完全相同<span style="font-weight:400">　點擊展開明細</span></summary>
       ${onlyA.length?`<div>只在 Rev A：${onlyA.map(c=>'<code>'+esc(c)+'</code>').join(' ')}</div>`:''}
       ${onlyB.length?`<div>只在 Rev B：${onlyB.map(c=>'<code>'+esc(c)+'</code>').join(' ')}</div>`:''}
-      <div>缺少的一側視為空值比對。</div></div>`);
+      <div>缺少的一側視為空值比對。</div></details>`);
   $('#warns').innerHTML = w.join('');
 }
 function renderFilterChips(){
