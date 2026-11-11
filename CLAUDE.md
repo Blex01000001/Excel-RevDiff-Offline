@@ -18,7 +18,7 @@
 | `samples/demo_RevA.xlsx`、`demo_RevB.xlsx` | 假資料範例，用來做驗證（Key＝`SKU`） |
 | `.nojekyll` | 讓 GitHub Pages 直接提供靜態檔，不要刪 |
 
-`src/template.html` 內的區段（找函式用 `grep -n "^function"`）：多語系 `I18N`／`t()` → 狀態 `S`、`draft`、`applied`、`R` → 處理中提示 `withBusy()` → 讀檔 `loadFile()`／`parseSlot()` → 欄位設定 `renderCfg()`／`applyConfig()` → 比對核心 `compare()`／`pairGroup()` → 顯示 `renderSummary()`／`renderWarnings()`／`renderTable()` → 匯出 `exportXlsx()`／`buildXlsx()` → 主題與語言切換。
+`src/template.html` 內的區段（找函式用 `grep -n "^function"`）：多語系 `I18N`／`t()` → 狀態 `S`、`draft`、`applied`、`R` → 處理中提示 `withBusy()` → 背景執行 `runJob()`／`jobDispatch()`／`workerSource()` → 讀檔 `loadFile()`／`parseSlot()` → 欄位設定 `renderCfg()`／`applyConfig()` → 比對核心 `compare()`／`pairGroup()` → 顯示 `renderSummary()`／`renderWarnings()`／`renderTable()` → 匯出 `exportXlsx()`／`buildXlsx()` → 主題與語言切換。
 
 ## 常見任務怎麼改
 
@@ -26,7 +26,7 @@
 
 - **改或新增介面文字** → `src/template.html` 的 `I18N.zh` 與 `I18N.en`（兩邊都要有同一個 key）；靜態 HTML 用 `data-i18n`／`data-i18n-ph`／`data-i18n-title`，動態文字用 `t('key', ...)` → 欄名是資料鍵，不翻譯 → 切換語言後畫面（含結果、匯出標題）都正確。
 - **新增 UI 元件** → template 的 HTML 與 CSS → 顏色用 CSS 變數（暗／亮兩組都要有值）；文字走 i18n；耗時動作包 `withBusy()` → 暗色與亮色、中文與英文各看一次。
-- **改比對邏輯** → `compare()`、`pairGroup()`、`norm()`／`nval()` → 保持 `GREEDY_LIMIT` 的保護；每格正規化只算一次（快取在 `row.nc`）→ 用 3 萬 + 5 萬列的假資料量時間，並跑下面的「快速檢查」。
+- **改比對邏輯** → `compare()`、`pairGroup()`、`norm()`／`nval()` → `compare()` 在 Worker 裡執行，新用到的函式要加進 `workerSource()` 的清單（見「容易踩的雷」）；保持 `GREEDY_LIMIT` 的保護；每格正規化只算一次（快取在 `row.nc`）→ 用 3 萬 + 5 萬列的假資料量時間，並跑下面的「快速檢查」。
 - **改匯出 .xlsx** → `exportXlsx()`（內容）、`sheetXml()`／`buildXlsx()`（檔案格式與樣式 `STY`）→ 這是自己寫的 zip + OOXML，新增樣式要同步改 `styles.xml` 的 `cellXfs` 數量 → 用 openpyxl 讀回檢查值、顏色、凍結窗格。
 - **支援新的檔案格式** → `loadFile()` 前的 `<input accept>`、README 的格式清單 → 先用 SheetJS 產生該格式的測試檔實際載入驗證（含中文）。
 - **升版本** → 只改 `src/VERSION`，再執行 `python3 src/build.py` → 一起 commit `src/VERSION` 與 `index.html`。
@@ -39,7 +39,7 @@ python3 src/build.py
 node -e "const s=require('fs').readFileSync('index.html','utf8');const i=s.lastIndexOf('<script>');new Function(s.slice(i+8,s.indexOf('</script>',i)));console.log('SYNTAX OK')"
 ```
 
-再用 Playwright（雲端環境已預裝，`require('playwright')`）打開 `index.html`：`#fileA`／`#fileB` 載入 `samples/demo_RevA.xlsx` 與 `demo_RevB.xlsx` → 點 `#btnSuggest` → `a[data-act=all][data-k=cmp]`（比對全選）→ `#btnApply`，預期摘要為 **新增 2／刪除 1／修改 2／未變 2**，且 `pageerror` 為空。Playwright 的預設瀏覽器語言是英文，所以畫面是英文介面。
+再用 Playwright（雲端環境已預裝，`require('playwright')`）打開 `index.html`（預設走 Worker 路徑；測備援路徑用 `page.addInitScript(() => { window.Worker = function(){ throw new Error('x') } })`，結果應相同）：`#fileA`／`#fileB` 載入 `samples/demo_RevA.xlsx` 與 `demo_RevB.xlsx` → 點 `#btnSuggest` → `a[data-act=all][data-k=cmp]`（比對全選）→ `#btnApply`，預期摘要為 **新增 2／刪除 1／修改 2／未變 2**，且 `pageerror` 為空。Playwright 的預設瀏覽器語言是英文，所以畫面是英文介面。
 
 ## 架構決策（不要改回去）
 
@@ -52,6 +52,7 @@ node -e "const s=require('fs').readFileSync('index.html','utf8');const i=s.lastI
 - **重複 Key 不略過、只收折成警告** — 使用者要求「不要默默略過」但不想被洗版 — 不要刪掉警告，也不要預設展開。
 - **數量差值是獨立的數字欄，儲存格只顯示 `舊 → 新`** — 方便篩選、排序、加總，匯出後 Excel 也能用 — 不要再把 `+3` 標籤塞回儲存格。
 - **預設暗色主題，不跟隨作業系統**；**語言預設跟隨瀏覽器**，兩者都用 localStorage 記住 — 使用者指定 — 不要改回 `prefers-color-scheme`。
+- **讀檔、解析工作表、比對都在 Web Worker 執行；Worker 原始碼＝內嵌 SheetJS（`<script type="text/plain" id="sheetjs-src">`）＋用 `Function.toString()` 取出的函式；Worker 失敗自動退回主執行緒** — 數萬列時主執行緒會凍結數秒，又必須維持單一 HTML — 不要拆成外部 worker 檔、不要把 SheetJS 改回主執行緒直接載入、不要移除備援。
 - **標題列固定（sticky）** — 使用者指定 — 不要移除。
 
 ## 設計規範
@@ -75,6 +76,8 @@ node -e "const s=require('fs').readFileSync('index.html','utf8');const i=s.lastI
 - `.card{scroll-margin-top:72px}` — 與固定標題列高度綁在一起 — 改標題列高度時一併調整，否則自動捲動會被擋住。
 - `exportXlsx()` 的數字儲存格 — `sheetXml()` 會略過 `''` 與 `null`、數字才寫成 `<v>` — 想輸出空白用 `''`，不要用 `0`。
 - 搜尋用的 `e.hay` — 狀態文字同時放中英文（`新增 added` …）— 為了切換語言後搜尋仍有效，不要只留一種。
+- `workerSource()` 的函式清單 — `compare()` 與它呼叫的函式（`cellStr`、`norm`、`pairGroup`…）是用 `toString()` 複製進 Worker 的，Worker 內看不到主執行緒的 `t()`、`$()`、`S`、DOM — 新增 `compare()` 的依賴函式時要加進清單，否則 Worker 內會 ReferenceError；備援路徑（主執行緒）卻不會發現，所以改完要用預設的 Worker 路徑跑一次。`compare()` 回傳的是精簡結果（以 `ai`／`bi` 列索引取代列物件），`runCompare()` 才還原；顯示文字（例如空 Key 的標籤）要在主執行緒用 `t()` 產生。
+- 「快速檢查」的語法檢查 — 以最後一個 `<script>` 為應用程式碼 — SheetJS 是 `type="text/plain"` 所以不會被誤判；不要在應用程式碼後面再加別的 `<script>`。
 - `showMsg()` — 要傳「產生文字的函式」（`() => t('key')`），不是字串 — 這樣切換語言時 `renderMsg()` 才能用新語言重新產生；拋出錯誤時用 `err.key` 帶 i18n key，不要把翻譯後的字串放進 `Error`。
 - `refresh()` — 載入／換檔／換工作表會清掉結果與 `applied` — 這是預期行為，使用者要重新按套用；`draft`（勾選）則保留。
 - 預設標題 `Col{n}` — 空白標題的欄名 — 刻意用不翻譯的名稱，避免切換語言後資料鍵改變。
