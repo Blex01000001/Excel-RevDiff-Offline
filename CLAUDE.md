@@ -30,7 +30,7 @@
 - **改比對邏輯** → `compare()`、`pairGroup()`、`norm()`／`nval()` → `compare()` 在 Worker 裡執行，新用到的函式要加進 `workerSource()` 的清單（見「容易踩的雷」）；保持 `GREEDY_LIMIT` 的保護；每格正規化只算一次（快取在 `row.nc`）→ 用 3 萬 + 5 萬列的假資料量時間，並跑下面的「快速檢查」。
 - **改匯出 .xlsx** → `exportXlsx()`（內容）、`sheetXml()`／`buildXlsx()`（檔案格式與樣式 `STY`）→ 這是自己寫的 zip + OOXML，新增樣式要同步改 `styles.xml` 的 `cellXfs` 數量 → 用 openpyxl 讀回檢查值、顏色、凍結窗格。
 - **支援新的檔案格式** → `loadFile()` 前的 `<input accept>`、README 的格式清單 → 先用 SheetJS 產生該格式的測試檔實際載入驗證（含中文）。
-- **升版本** → 只改 `src/VERSION`，再執行 `python3 src/build.py` → 一起 commit `src/VERSION` 與 `index.html`。
+- **升版本** → 只改 `src/VERSION`，再執行 `python3 src/build.py` → 一起 commit `src/VERSION` 與 `index.html`。依修改量判斷：只修錯誤或微調 → patch（1.1.**x**）；新增功能或明顯改善、使用方式相容 → minor（1.**x**.0）；使用方式不相容 → major。
 - **改主題顏色** → template 開頭的 `:root[data-theme="dark|light"]` 變數 → 兩個主題一起改，並看過兩種畫面。
 
 **快速檢查**（沒有單元測試／lint，用這個代替；任何改動後都要跑）：
