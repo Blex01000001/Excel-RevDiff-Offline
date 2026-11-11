@@ -26,6 +26,8 @@ Offline single-file HTML tool to compare two Excel sheets of the same format by 
 python3 src/build.py
 ```
 
+版本號放在 `src/VERSION`，建置時會自動顯示在標題旁。
+
 ## 範例
 
 `samples/demo_RevA.xlsx` 與 `demo_RevB.xlsx`：Key 選 `SKU`，包含新增、刪除、修改、全形/大小寫/空白差異與重複 Key 的示範。
