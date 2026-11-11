@@ -8,11 +8,11 @@
 :root{
   --bg:#f4f6f9;--panel:#fff;--text:#1d2433;--muted:#667085;--line:#d9dee7;--accent:#2457c5;--accent-soft:#e6edfb;
   --add:#d7f2dd;--add-t:#17642b;--del:#fbd9d9;--del-t:#a12121;--mod:#fff1b3;--mod-t:#7a5a00;--same-t:#475467;
-  --old:#b42318;
+  --old:#b42318;--on-accent:#fff;
 }
 @media (prefers-color-scheme:dark){
   :root{--bg:#12161d;--panel:#1b212b;--text:#e6e9ef;--muted:#98a2b3;--line:#323b4a;--accent:#7aa2f7;--accent-soft:#25324d;
-  --add:#1c3d27;--add-t:#8fe3a6;--del:#4a2022;--del-t:#ff9c9c;--mod:#5a4a10;--mod-t:#ffe38a;--same-t:#b5bdcb;--old:#ff9c8f}
+  --add:#1c3d27;--add-t:#8fe3a6;--del:#4a2022;--del-t:#ff9c9c;--mod:#5a4a10;--mod-t:#ffe38a;--same-t:#b5bdcb;--old:#ff9c8f;--on-accent:#101521}
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -22,7 +22,9 @@ header h1{margin:0;font-size:18px}
 header span{color:var(--muted);font-size:12px}
 main{padding:16px 20px;max-width:1800px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}
-.card h2{margin:0 0 10px;font-size:14px}
+.card{border-top:3px solid var(--accent)}
+.card h2{display:flex;align-items:center;gap:10px;margin:0 0 14px;padding-bottom:10px;border-bottom:1px solid var(--line);font-size:19px;font-weight:700}
+.card h2 .step{flex:none;width:30px;height:30px;border-radius:50%;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;font-size:16px;font-weight:700}
 .files{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 @media(max-width:800px){.files{grid-template-columns:1fr}}
 .drop{border:2px dashed var(--line);border-radius:8px;padding:14px;text-align:center;cursor:pointer;color:var(--muted);display:block}
@@ -66,7 +68,7 @@ summary{cursor:pointer;color:var(--accent)}
 .fchip.on.mod{background:var(--mod);color:var(--mod-t);border-color:var(--mod-t)}
 .fchip.on.same,.fchip.on.all{background:var(--accent-soft);border-color:var(--accent)}
 .fchip:not(.on){opacity:.55}
-button.primary{background:var(--accent);color:#fff;border:0;border-radius:6px;padding:6px 14px;font:inherit;cursor:pointer}
+button.primary{background:var(--accent);color:var(--on-accent);font-weight:600;border:0;border-radius:6px;padding:6px 14px;font:inherit;cursor:pointer}
 button.primary:disabled{opacity:.4;cursor:not-allowed}
 .sp{flex:1}
 .tw{overflow:auto;max-height:72vh;border:1px solid var(--line);border-radius:8px}
@@ -132,12 +134,12 @@ details.warn>div,details.warn>ul{margin-top:8px}
 <header><h1>Excel RevDiff Offline</h1><span>比對兩份格式相同的 Excel・完全離線，資料僅在本機瀏覽器處理，不會上傳</span></header>
 <main>
   <section class="card">
-    <h2>① 選擇檔案</h2>
+    <h2><span class="step">1</span>選擇檔案</h2>
     <div class="files" id="files"></div>
   </section>
 
   <section class="card" id="cfgCard" hidden>
-    <h2>② 比對設定</h2>
+    <h2><span class="step">2</span>比對設定</h2>
     <div class="legend">
       <span><b>Key</b>：用來配對新舊兩列的欄位組合（可多選）</span>
       <span><b>比對</b>：要檢查是否被修改的欄位（不勾＝忽略該欄差異）</span>
@@ -160,7 +162,7 @@ details.warn>div,details.warn>ul{margin-top:8px}
   <div id="msg"></div>
 
   <section class="card" id="sumCard" hidden>
-    <h2>③ 比對摘要</h2>
+    <h2><span class="step">3</span>比對摘要</h2>
     <div class="stats" id="stats"></div>
     <div class="colstat" id="colStat"></div>
   </section>
@@ -168,7 +170,7 @@ details.warn>div,details.warn>ul{margin-top:8px}
   <div id="warns"></div>
 
   <section class="card" id="resCard" hidden>
-    <h2>④ 比對結果</h2>
+    <h2><span class="step">4</span>比對結果</h2>
     <div class="opts" style="margin:0 0 10px">
       <label><input type="checkbox" id="optHideEmpty" checked> 隱藏全空欄位</label>
       <label><input type="checkbox" id="optOnlyDiff"> 只顯示 Key 與有差異的欄位</label>
