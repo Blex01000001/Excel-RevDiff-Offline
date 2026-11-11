@@ -17,10 +17,13 @@
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 "Microsoft JhengHei","PingFang TC","Noto Sans CJK TC",system-ui,sans-serif}
-header{position:sticky;top:0;z-index:50;padding:10px 20px;border-bottom:1px solid var(--line);background:var(--panel);display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;box-shadow:0 1px 6px rgba(0,0,0,.08)}
-.card{scroll-margin-top:72px}
+header{position:sticky;top:0;z-index:50;padding:10px 20px;border-bottom:1px solid var(--line);background:var(--panel);display:flex;align-items:center;gap:14px;flex-wrap:wrap;box-shadow:0 1px 6px rgba(0,0,0,.08)}
 header h1{margin:0;font-size:18px}
-header span{color:var(--muted);font-size:12px}
+header .sub{color:var(--muted);font-size:12px}
+.langbtn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:999px;padding:5px 12px 5px 9px;font:inherit;font-size:13px;cursor:pointer}
+.langbtn:hover{border-color:var(--accent);color:var(--accent)}
+.langbtn svg{width:18px;height:18px;flex:none}
+.card{scroll-margin-top:72px}
 main{padding:16px 20px;max-width:1800px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}
 .card{border-top:3px solid var(--accent)}
@@ -62,7 +65,7 @@ summary{cursor:pointer;color:var(--accent)}
 .warn ul{margin:4px 0 0;padding-left:20px;max-height:220px;overflow:auto;font-size:13px}
 .warn code{background:rgba(0,0,0,.08);padding:0 4px;border-radius:3px}
 .toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:10px}
-.toolbar input[type=search]{min-width:240px;flex:0 1 320px}
+.toolbar input[type=search]{min-width:240px;flex:0 1 360px}
 .fchip{border:1px solid var(--line);border-radius:6px;padding:3px 10px;cursor:pointer;background:var(--panel);font-size:13px;color:var(--text)}
 .fchip.on.add{background:var(--add);color:var(--add-t);border-color:var(--add-t)}
 .fchip.on.del{background:var(--del);color:var(--del-t);border-color:var(--del-t)}
@@ -137,38 +140,39 @@ th.dth:hover{color:var(--accent)}
 </style>
 </head>
 <body>
-<header><h1>Excel RevDiff Offline</h1><span>比對兩份格式相同的 Excel・完全離線，資料僅在本機瀏覽器處理，不會上傳</span></header>
+<header><h1>Excel RevDiff Offline</h1><span class="sub" data-i18n="subtitle"></span><span class="sp"></span>
+  <button class="langbtn" id="langBtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M2.5 12h19M12 2.5c2.6 2.7 3.9 5.9 3.9 9.5s-1.3 6.8-3.9 9.5c-2.6-2.7-3.9-5.9-3.9-9.5S9.4 5.2 12 2.5z"/></svg><span id="langCode"></span></button></header>
 <main>
   <section class="card">
-    <h2><span class="step">1</span>選擇檔案</h2>
+    <h2><span class="step">1</span><span data-i18n="s1"></span></h2>
     <div class="files" id="files"></div>
   </section>
 
   <section class="card" id="cfgCard" hidden>
-    <h2><span class="step">2</span>比對設定</h2>
+    <h2><span class="step">2</span><span data-i18n="s2"></span></h2>
     <div class="legend">
-      <span><b>Key</b>：用來配對新舊兩列的欄位組合（可多選）</span>
-      <span><b>比對</b>：要檢查是否被修改的欄位（不勾＝忽略該欄差異）</span>
-      <span><b>數量</b>：該欄變動時顯示差值（如 12 → 15，+3）</span>
+      <span data-i18n="legKey"></span>
+      <span data-i18n="legCmp"></span>
+      <span data-i18n="legQty"></span>
     </div>
     <div class="cfgbar">
-      <input type="search" id="colFilter" placeholder="搜尋欄位名稱">
-      <button class="btn" id="btnSuggest" title="依欄位名稱或資料內容，幫你勾選可能的 Key">建議 Key</button>
-      <button class="btn" id="btnReset">全部清除</button>
+      <input type="search" id="colFilter" data-i18n-ph="phCol">
+      <button class="btn" id="btnSuggest" data-i18n="btnSuggest" data-i18n-title="titSuggest"></button>
+      <button class="btn" id="btnReset" data-i18n="btnReset"></button>
     </div>
     <div class="cfgwrap" id="cfgTable"></div>
     <div class="applybar">
       <div id="cfgStatus" class="cfgstatus"></div>
       <span class="pend" id="pend"></span>
-      <button class="primary" id="btnApply">套用並開始比對</button>
+      <button class="primary" id="btnApply" data-i18n="btnApply"></button>
     </div>
-    <p class="hint">比對前正規化：去除前後空白、全形轉半形、忽略大小寫、數字 10 與 10.0 視為相同（有前置 0 的代碼如 007 不會被當成數字）。</p>
+    <p class="hint" data-i18n="normHint"></p>
   </section>
 
   <div id="msg"></div>
 
   <section class="card" id="sumCard" hidden>
-    <h2><span class="step">3</span>比對摘要</h2>
+    <h2><span class="step">3</span><span data-i18n="s3"></span></h2>
     <div class="stats" id="stats"></div>
     <div class="colstat" id="colStat"></div>
   </section>
@@ -176,36 +180,158 @@ th.dth:hover{color:var(--accent)}
   <div id="warns"></div>
 
   <section class="card" id="resCard" hidden>
-    <h2><span class="step">4</span>比對結果</h2>
+    <h2><span class="step">4</span><span data-i18n="s4"></span></h2>
     <div class="opts" style="margin:0 0 10px">
-      <label><input type="checkbox" id="optHideEmpty" checked> 隱藏全空欄位</label>
-      <label><input type="checkbox" id="optOnlyDiff"> 只顯示 Key 與有差異的欄位</label>
+      <label><input type="checkbox" id="optHideEmpty" checked> <span data-i18n="optHideEmpty"></span></label>
+      <label><input type="checkbox" id="optOnlyDiff"> <span data-i18n="optOnlyDiff"></span></label>
     </div>
     <div class="toolbar" id="dtool" hidden>
-      <b>數量差值</b>
+      <b data-i18n="dTitle"></b>
       <select id="dcol"></select>
       <div class="chips" id="dmodes"></div>
       <span class="meta" id="dsum"></span>
     </div>
     <div class="toolbar">
       <div class="chips" id="fchips"></div>
-      <input type="search" id="q" placeholder="搜尋任何欄位（可用空白分隔多個關鍵字）">
+      <input type="search" id="q" data-i18n-ph="phQ">
       <span class="meta" id="cnt"></span>
       <span class="sp"></span>
-      <label class="opts" style="margin:0"><span style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="expFiltered"> 僅匯出目前篩選結果</span></label>
-      <button class="primary" id="btnExport">匯出 .xlsx</button>
+      <label class="opts" style="margin:0"><span style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="expFiltered"> <span data-i18n="expFiltered"></span></span></label>
+      <button class="primary" id="btnExport" data-i18n="btnExport"></button>
     </div>
     <div class="tw" id="tw"></div>
   </section>
 </main>
 
-<div id="busy" hidden><div class="box"><div class="t" id="busyT">處理中…</div><div class="s">檔案較大時需要幾秒到數十秒，請稍候，畫面暫時沒反應是正常的</div><div class="bar"><i></i></div></div></div>
+<div id="busy" hidden><div class="box"><div class="t" id="busyT"></div><div class="s" data-i18n="busyNote"></div><div class="bar"><i></i></div></div></div>
 <script>/*__SHEETJS__*/</script>
 <script>
 'use strict';
 /* ================= 工具函式 ================= */
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ================= 多語系 (zh / en) ================= */
+const I18N = {
+zh:{
+  subtitle:'比對兩份格式相同的 Excel・完全離線，資料僅在本機瀏覽器處理，不會上傳',
+  s1:'選擇檔案', s2:'比對設定', s3:'比對摘要', s4:'比對結果',
+  legKey:'<b>Key</b>：用來配對新舊兩列的欄位組合（可多選）',
+  legCmp:'<b>比對</b>：要檢查是否被修改的欄位（不勾＝忽略該欄差異）',
+  legQty:'<b>數量</b>：該欄變動時顯示差值（如 12 → 15，+3）',
+  phCol:'搜尋欄位名稱', btnSuggest:'建議 Key', titSuggest:'依欄位名稱或資料內容，幫你勾選可能的 Key',
+  btnReset:'全部清除', btnApply:'套用並開始比對',
+  normHint:'比對前正規化：去除前後空白、全形轉半形、忽略大小寫、數字 10 與 10.0 視為相同（有前置 0 的代碼如 007 不會被當成數字）。',
+  optHideEmpty:'隱藏全空欄位', optOnlyDiff:'只顯示 Key 與有差異的欄位',
+  dTitle:'數量差值', phQ:'搜尋任何欄位（可用空白分隔多個關鍵字）', expFiltered:'僅匯出目前篩選結果', btnExport:'匯出 .xlsx',
+  busyDefault:'處理中…', busyNote:'檔案較大時需要幾秒到數十秒，請稍候，畫面暫時沒反應是正常的',
+  langTo:'EN', langTip:'Switch to English',
+  revA:'Rev A（舊版）', revB:'Rev B（新版）',
+  dropHint:'點擊選擇檔案，或把 Excel 檔拖曳到這裡', dropFmt:'支援 .xlsx .xlsm .xlsb .xls .ods .csv',
+  sheetLbl:'工作表', hrPre:'標題列在第', hrPost:'列',
+  readSheet:'讀取工作表中…', readData:'讀取資料中…', readFile:'讀取 {0} 中…', comparing:'比對中…',
+  errRead:'無法讀取檔案 <code>{0}</code>', errNoSheet:'檔案內沒有工作表',
+  errParse:'讀取 <code>{0}</code> 失敗：{1}（請確認是有效的 Excel 檔，且未加密）',
+  hrOut:'標題列超出範圍',
+  meta:(n,c,h)=>`${n} 筆資料列、${c} 欄（標題列：${h}）`,
+  tipQtyLock:'已勾選「數量」，因此一定會比對這一欄',
+  all:'全選', none:'清除', onlyA:'僅 Rev A', onlyB:'僅 Rev B',
+  thCol:'欄位', thSample:'範例值', thKey:'Key', thCmp:'比對', thQty:'數量', noCols:'沒有符合的欄位',
+  status:(nk,keys,nc,nq)=>`已選 Key <b>${nk}</b> 欄${nk ? '：<code>' + keys + '</code>' : '（請至少選一個）'}　比對 <b>${nc}</b> 欄　數量 <b>${nq}</b> 欄`,
+  warnNoCmp:'⚠ 尚未勾選任何比對欄位，只會判斷新增 / 刪除，不會偵測修改',
+  pendNone:'尚未比對', pendDirty:'● 設定已變更，尚未套用',
+  errNeedKey:'請至少選擇一個 Key 欄位。',
+  notInA:'（Rev A 沒有）', notInB:'（Rev B 沒有）', joiner:'、',
+  errMissKey:m=>`Key 欄位 ${m}，請調整 Key 或標題列。`,
+  keyEmpty:'（Key 全空）',
+  stAdd:'新增', stDel:'刪除', stMod:'修改', stSame:'未變', totalRows:'總列數',
+  colStatHead:'修改欄位統計：', noMod:'沒有任何欄位被修改。',
+  dupTitle:(lab,g,r)=>`⚠ ${lab} 有 ${g} 組重複 Key（共 ${r} 列）`, expandDetail:'點擊展開明細', expandNote:'點擊展開說明',
+  dupBody:'同一檔案內 Key 相同的列不會被略過：會與另一檔的同 Key 列依「差異最少」優先一對一配對，多出來的列計為新增 / 刪除。建議把更多欄位勾進 Key 以降低重複。',
+  dupLi:(k,n,rows,more)=>`<code>${k}</code> × ${n}　（Excel 列 ${rows}${more ? ' …共 ' + more + ' 列' : ''}）`,
+  dupMoreGroups:n=>`…另有 ${n} 組`,
+  lowTitle:'⚠ 目前的 Key 區分度太低，比對結果不可靠',
+  lowBody:(who,byOrder)=>`${who}有大量列的 Key 相同。${byOrder ? `其中 <b>${byOrder}</b> 列因同 Key 數量過多，只能依出現順序配對，修改與新增 / 刪除的判斷可能不準。` : ''} 請在上方「比對設定」多勾選幾個能唯一識別一列的 Key 欄位（例如編號、代碼、尺寸、序號等），再按「套用並開始比對」。`,
+  someData:'部分資料',
+  colDiffTitle:'⚠ 兩檔欄位不完全相同', onlyInA:'只在 Rev A：', onlyInB:'只在 Rev B：', missingNote:'缺少的一側視為空值比對。',
+  fAll:'全部',
+  dInc:'增加 (+)', dDec:'減少 (−)', dChg:'有變動', dZero:'無變動',
+  dSum:(s,i,d)=>`目前顯示的列：差值合計 ${s}（增加 ${i} 列、減少 ${d} 列）`,
+  empty:'空', oldNew:(o,n)=>`舊：${o} → 新：${n}`,
+  showing:(a,b)=>`顯示 ${a} / ${b} 列`,
+  hStatus:'類別', hChanged:'差異欄位', hRowA:'A 列', hRowB:'B 列', hDelta:c=>`${c} 差值`,
+  sortTip:'點擊排序（由大到小 → 由小到大 → 取消）',
+  loadMore:n=>`再載入 500 列（尚有 ${n} 列）`, noRows:'沒有符合條件的列',
+  xItem:'項目', xValue:'內容', xFile:(n,sh,hr,c)=>`${n}　[${sh}]　標題列第 ${hr} 列　${c} 筆`,
+  xKey:'Key 欄位', xScope:'匯出範圍', xScopeF:n=>`目前篩選結果（${n} 列）`, xScopeA:n=>`全部（${n} 列）`,
+  xColStat:'修改欄位統計', xCount:'次數', xDup:'重複 Key 警告', xDupHead:'來源 / 數量 / Excel 列',
+  xDupLine:(side,n,rows)=>`Rev ${side} × ${n}（列 ${rows}）`, xNone:'（無）', xEmpty:'(空)',
+  xSheetRes:'比對結果', xSheetSum:'摘要',
+},
+en:{
+  subtitle:'Compare two Excel files of the same layout · Fully offline — data stays in your browser, nothing is uploaded',
+  s1:'Select files', s2:'Compare settings', s3:'Summary', s4:'Results',
+  legKey:'<b>Key</b>: columns that together identify the same row in both files (multiple allowed)',
+  legCmp:'<b>Compare</b>: columns checked for changes (unchecked = differences ignored)',
+  legQty:'<b>Quantity</b>: shows the difference when changed (e.g. 12 → 15, +3)',
+  phCol:'Search column name', btnSuggest:'Suggest Key', titSuggest:'Tick likely Key columns based on column names or data',
+  btnReset:'Clear all', btnApply:'Apply & compare',
+  normHint:'Normalization before comparing: trims spaces, converts full-width to half-width, ignores case, and treats 10 and 10.0 as equal (codes with leading zeros such as 007 are not treated as numbers).',
+  optHideEmpty:'Hide empty columns', optOnlyDiff:'Show only Key and changed columns',
+  dTitle:'Quantity delta', phQ:'Search any column (space-separated keywords)', expFiltered:'Export current filter only', btnExport:'Export .xlsx',
+  busyDefault:'Processing…', busyNote:'Large files can take several seconds up to a minute. Please wait — the page may look unresponsive meanwhile.',
+  langTo:'中文', langTip:'切換為中文',
+  revA:'Rev A (old)', revB:'Rev B (new)',
+  dropHint:'Click to choose a file, or drag an Excel file here', dropFmt:'Supports .xlsx .xlsm .xlsb .xls .ods .csv',
+  sheetLbl:'Sheet', hrPre:'Header row', hrPost:'',
+  readSheet:'Reading sheet…', readData:'Reading data…', readFile:'Reading {0}…', comparing:'Comparing…',
+  errRead:'Cannot read file <code>{0}</code>', errNoSheet:'The file contains no sheets',
+  errParse:'Failed to read <code>{0}</code>: {1} (make sure it is a valid, unencrypted Excel file)',
+  hrOut:'Header row is out of range',
+  meta:(n,c,h)=>`${n} data rows, ${c} columns (headers: ${h})`,
+  tipQtyLock:'"Quantity" is ticked, so this column is always compared',
+  all:'All', none:'None', onlyA:'Only in Rev A', onlyB:'Only in Rev B',
+  thCol:'Column', thSample:'Sample', thKey:'Key', thCmp:'Compare', thQty:'Quantity', noCols:'No matching columns',
+  status:(nk,keys,nc,nq)=>`Key: <b>${nk}</b> column${nk===1?'':'s'}${nk ? ': <code>' + keys + '</code>' : ' (pick at least one)'} · Compare: <b>${nc}</b> · Quantity: <b>${nq}</b>`,
+  warnNoCmp:'⚠ No Compare column is ticked — only added / deleted rows will be detected, not modifications',
+  pendNone:'Not compared yet', pendDirty:'● Settings changed — not applied yet',
+  errNeedKey:'Please pick at least one Key column.',
+  notInA:' (not in Rev A)', notInB:' (not in Rev B)', joiner:', ',
+  errMissKey:m=>`Key column(s) ${m} — adjust the Key or the header row.`,
+  keyEmpty:'(empty key)',
+  stAdd:'Added', stDel:'Deleted', stMod:'Modified', stSame:'Unchanged', totalRows:'Total rows',
+  colStatHead:'Modified columns: ', noMod:'No column was modified.',
+  dupTitle:(lab,g,r)=>`⚠ ${lab}: ${g} duplicate Key group${g===1?'':'s'} (${r} rows)`, expandDetail:'click to expand', expandNote:'click to expand',
+  dupBody:'Rows that share a Key inside the same file are not skipped: they are paired one-to-one with the other file\'s rows of the same Key (fewest differences first); any extra rows count as added / deleted. Add more columns to the Key to reduce duplicates.',
+  dupLi:(k,n,rows,more)=>`<code>${k}</code> × ${n} (Excel rows ${rows}${more ? ' … ' + more + ' rows in total' : ''})`,
+  dupMoreGroups:n=>`… and ${n} more group${n===1?'':'s'}`,
+  lowTitle:'⚠ The current Key is not distinctive enough — results may be unreliable',
+  lowBody:(who,byOrder)=>`${who} contain${/,/.test(who)?'':'s'} many rows with the same Key. ${byOrder ? `<b>${byOrder}</b> of them had too many rows per Key and could only be paired by order, so Modified vs Added / Deleted may be inaccurate.` : ''} In "Compare settings" above, tick more columns that uniquely identify a row (ID, code, size, serial no., etc.), then press "Apply & compare".`,
+  someData:'Some data',
+  colDiffTitle:'⚠ The two files have different columns', onlyInA:'Only in Rev A: ', onlyInB:'Only in Rev B: ', missingNote:'A missing column is treated as empty.',
+  fAll:'All',
+  dInc:'Increased (+)', dDec:'Decreased (−)', dChg:'Changed', dZero:'Unchanged',
+  dSum:(s,i,d)=>`Rows shown: total delta ${s} (${i} increased, ${d} decreased)`,
+  empty:'empty', oldNew:(o,n)=>`Old: ${o} → New: ${n}`,
+  showing:(a,b)=>`Showing ${a} / ${b} rows`,
+  hStatus:'Status', hChanged:'Changed columns', hRowA:'Row A', hRowB:'Row B', hDelta:c=>`${c} delta`,
+  sortTip:'Click to sort (descending → ascending → off)',
+  loadMore:n=>`Load 500 more rows (${n} remaining)`, noRows:'No matching rows',
+  xItem:'Item', xValue:'Value', xFile:(n,sh,hr,c)=>`${n}  [${sh}]  header row ${hr}  ${c} rows`,
+  xKey:'Key columns', xScope:'Export scope', xScopeF:n=>`Current filter (${n} rows)`, xScopeA:n=>`All (${n} rows)`,
+  xColStat:'Modified columns', xCount:'Count', xDup:'Duplicate Key warnings', xDupHead:'Source / count / Excel rows',
+  xDupLine:(side,n,rows)=>`Rev ${side} × ${n} (rows ${rows})`, xNone:'(none)', xEmpty:'(empty)',
+  xSheetRes:'Result', xSheetSum:'Summary',
+}};
+let lang = 'zh';
+try{ lang = localStorage.getItem('revdiff-lang') || ((navigator.language||'').toLowerCase().startsWith('zh') ? 'zh' : 'en'); }catch(e){ lang = (navigator.language||'').toLowerCase().startsWith('zh') ? 'zh' : 'en'; }
+if (!I18N[lang]) lang = 'en';
+function t(k, ...a){
+  const v = (I18N[lang] && I18N[lang][k] !== undefined) ? I18N[lang][k] : (I18N.zh[k] !== undefined ? I18N.zh[k] : k);
+  return typeof v === 'function' ? v(...a) : String(v).replace(/\{(\d+)\}/g, (m,i) => a[i]);
+}
+const STATUS = () => ({add:t('stAdd'), del:t('stDel'), mod:t('stMod'), same:t('stSame')});
+
 const NUM_RE = /^[+-]?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?$/;
 
 function cellStr(v){
@@ -249,8 +375,8 @@ function fmtDelta(d){
 
 /* ================= 狀態 ================= */
 const S = {
-  A:{id:'A', label:'Rev A（舊版）', wb:null, name:'', sheet:'', hr:1, aoa:null, off:0, headers:[], rows:null},
-  B:{id:'B', label:'Rev B（新版）', wb:null, name:'', sheet:'', hr:1, aoa:null, off:0, headers:[], rows:null},
+  A:{id:'A', get label(){ return t('revA'); }, wb:null, name:'', sheet:'', hr:1, aoa:null, off:0, headers:[], rows:null},
+  B:{id:'B', get label(){ return t('revB'); }, wb:null, name:'', sheet:'', hr:1, aoa:null, off:0, headers:[], rows:null},
 };
 const draft = { key:new Set(), cmp:new Set(), qty:new Set() };   // 使用者正在編輯的設定
 let applied = null;                                            // 已套用（比對結果所依據）的設定
@@ -267,7 +393,7 @@ let pageSize = 500;
 
 /* ================= 處理中提示 ================= */
 /* 先顯示提示並讓瀏覽器畫出來，再執行耗時工作；結束後一定會關閉 */
-function showBusy(msg){ $('#busyT').textContent = msg || '處理中…'; $('#busy').hidden = false; }
+function showBusy(msg){ $('#busyT').textContent = msg || t('busyDefault'); $('#busy').hidden = false; }
 function hideBusy(){ $('#busy').hidden = true; }
 const nextPaint = () => new Promise(r => requestAnimationFrame(() => setTimeout(r, 0)));
 async function withBusy(msg, fn){
@@ -277,40 +403,54 @@ async function withBusy(msg, fn){
 }
 
 /* ================= 讀檔 ================= */
+function renderSlotStatic(slot){
+  $('#dropTxt'+slot.id).innerHTML = `<b>${esc(slot.label)}</b><br>${t('dropHint')}<br><small>${t('dropFmt')}</small>`;
+  $('#shLbl'+slot.id).textContent = t('sheetLbl');
+  $('#hrPre'+slot.id).textContent = t('hrPre');
+  $('#hrPost'+slot.id).textContent = t('hrPost');
+  renderMeta(slot);
+}
+function renderMeta(slot){
+  const el = $('#meta'+slot.id);
+  if (!slot.rows && !slot.hrOut){ el.textContent = ''; return; }
+  el.textContent = slot.hrOut ? t('hrOut')
+    : t('meta', slot.rows.length, slot.headers.length, slot.headers.slice(0,6).join(' / ') + (slot.headers.length>6?' …':''));
+}
 function buildSlotUI(slot){
   const el = document.createElement('div');
   el.innerHTML = `
     <label class="drop" id="drop${slot.id}">
       <input type="file" accept=".xlsx,.xlsm,.xlsb,.xls,.ods,.csv" id="file${slot.id}">
-      <b>${slot.label}</b><br>點擊選擇檔案，或把 Excel 檔拖曳到這裡<br><small>支援 .xlsx .xlsm .xlsb .xls .ods .csv</small>
+      <span id="dropTxt${slot.id}"></span>
     </label>
     <div class="finfo" id="info${slot.id}" hidden>
       <span id="fname${slot.id}" style="font-weight:600"></span>
-      <label>工作表 <select id="sheet${slot.id}"></select></label>
-      <label>標題列在第 <input type="number" min="1" id="hr${slot.id}"> 列</label>
+      <label><span id="shLbl${slot.id}"></span> <select id="sheet${slot.id}"></select></label>
+      <label><span id="hrPre${slot.id}"></span> <input type="number" min="1" id="hr${slot.id}"> <span id="hrPost${slot.id}"></span></label>
     </div>
     <div class="meta" id="meta${slot.id}"></div>`;
   $('#files').appendChild(el);
+  renderSlotStatic(slot);
   const inp = $('#file'+slot.id), drop = $('#drop'+slot.id);
   inp.addEventListener('change', () => inp.files[0] && loadFile(slot, inp.files[0]));
   ['dragenter','dragover'].forEach(e => drop.addEventListener(e, ev => {ev.preventDefault(); drop.classList.add('over');}));
   ['dragleave','drop'].forEach(e => drop.addEventListener(e, ev => {ev.preventDefault(); drop.classList.remove('over');}));
   drop.addEventListener('drop', ev => { const f = ev.dataTransfer.files[0]; if (f) loadFile(slot, f); });
-  $('#sheet'+slot.id).addEventListener('change', e => { slot.sheet = e.target.value; slot.aoa = null; withBusy('讀取工作表中…', () => { parseSlot(slot, true); refresh(); }); });
-  $('#hr'+slot.id).addEventListener('change', e => { slot.hr = Math.max(1, parseInt(e.target.value)||1); withBusy('讀取資料中…', () => { parseSlot(slot, false); refresh(); }); });
+  $('#sheet'+slot.id).addEventListener('change', e => { slot.sheet = e.target.value; slot.aoa = null; withBusy(t('readSheet'), () => { parseSlot(slot, true); refresh(); }); });
+  $('#hr'+slot.id).addEventListener('change', e => { slot.hr = Math.max(1, parseInt(e.target.value)||1); withBusy(t('readData'), () => { parseSlot(slot, false); refresh(); }); });
 }
 function showMsg(html, err){
   $('#msg').innerHTML = html ? `<div class="warn ${err?'err':''}">${html}</div>` : '';
 }
 function loadFile(slot, file){
   const rd = new FileReader();
-  showBusy(`讀取 ${file.name} 中…`);
-  rd.onerror = () => { hideBusy(); showMsg(`無法讀取檔案 <code>${esc(file.name)}</code>`, true); };
+  showBusy(t('readFile', file.name));
+  rd.onerror = () => { hideBusy(); showMsg(t('errRead', esc(file.name)), true); };
   rd.onload = async () => {
     await nextPaint();
     try{
       const wb = XLSX.read(new Uint8Array(rd.result), {type:'array', cellDates:true});
-      if (!wb.SheetNames.length) throw new Error('檔案內沒有工作表');
+      if (!wb.SheetNames.length) throw new Error(t('errNoSheet'));
       slot.wb = wb; slot.name = file.name;
       const other = slot.id === 'A' ? S.B : S.A;
       slot.sheet = (other.wb && wb.SheetNames.includes(other.sheet)) ? other.sheet : wb.SheetNames[0];
@@ -322,7 +462,7 @@ function loadFile(slot, file){
       parseSlot(slot, true);
       refresh();
     }catch(e){
-      showMsg(`讀取 <code>${esc(file.name)}</code> 失敗：${esc(e.message||e)}（請確認是有效的 .xlsx，且未加密）`, true);
+      showMsg(t('errParse', esc(file.name), esc(e.message||e)), true);
     }finally{ hideBusy(); }
   };
   rd.readAsArrayBuffer(file);
@@ -348,10 +488,11 @@ function parseSlot(slot, autoHeader){
   $('#hr'+slot.id).value = slot.hr;
   const hi = slot.hr - slot.off - 1;
   const hrow = slot.aoa[hi];
-  if (!hrow){ slot.headers = []; slot.rows = []; $('#meta'+slot.id).textContent = '標題列超出範圍'; return; }
+  slot.hrOut = !hrow;
+  if (!hrow){ slot.headers = []; slot.rows = []; renderMeta(slot); return; }
   const seen = new Map();
   slot.headers = hrow.map((h,i) => {
-    let n = cellStr(h).normalize('NFKC').trim() || ('欄'+(i+1));
+    let n = cellStr(h).normalize('NFKC').trim() || ('Col'+(i+1));
     if (seen.has(n)){ const k = seen.get(n)+1; seen.set(n,k); n = n+'_'+k; } else seen.set(n,1);
     return n;
   });
@@ -363,7 +504,7 @@ function parseSlot(slot, autoHeader){
     slot.headers.forEach((h,j) => v[h] = r[j] === undefined ? '' : r[j]);
     slot.rows.push({rn: i + slot.off + 1, v, idx: slot.rows.length});
   }
-  $('#meta'+slot.id).textContent = `${slot.rows.length} 筆資料列、${slot.headers.length} 欄（標題列：${slot.headers.slice(0,6).join(' / ')}${slot.headers.length>6?' …':''}）`;
+  renderMeta(slot);
 }
 
 /* ================= 欄位設定 ================= */
@@ -413,7 +554,7 @@ function syncCmpBox(c){
   if (!cb) return;
   cb.checked = isCmp(c);
   cb.disabled = draft.key.has(c) || draft.qty.has(c);
-  cb.title = !draft.key.has(c) && draft.qty.has(c) ? '已勾選「數量」，因此一定會比對這一欄' : '';
+  cb.title = !draft.key.has(c) && draft.qty.has(c) ? t('tipQtyLock') : '';
 }
 const sameSet = (x, y) => x.size === y.size && [...x].every(v => y.has(v));
 function renderCfg(){
@@ -422,20 +563,20 @@ function renderCfg(){
   const wrap = $('#cfgTable'), top = wrap.scrollTop;
   const q = normText(colFilter);
   const list = COLS.filter(c => !q || normText(c).includes(q));
-  const mini = k => `<span class="mini"><a data-act="all" data-k="${k}">全選</a><a data-act="none" data-k="${k}">清除</a></span>`;
+  const mini = k => `<span class="mini"><a data-act="all" data-k="${k}">${t('all')}</a><a data-act="none" data-k="${k}">${t('none')}</a></span>`;
   const rows = list.map(c => {
     const onlyA = !S.B.headers.includes(c), onlyB = !S.A.headers.includes(c);
     const key = draft.key.has(c);
     return `<tr class="${key?'iskey':''}" data-row="${esc(c)}">
-      <td class="nm l">${esc(c)}${onlyA?'<span class="tag">僅 Rev A</span>':''}${onlyB?'<span class="tag">僅 Rev B</span>':''}</td>
+      <td class="nm l">${esc(c)}${onlyA?`<span class="tag">${t('onlyA')}</span>`:''}${onlyB?`<span class="tag">${t('onlyB')}</span>`:''}</td>
       <td class="smp l" title="${esc(sampleOf(c))}">${esc(sampleOf(c))}</td>
       <td><input type="checkbox" data-k="key" data-c="${esc(c)}" ${key?'checked':''}></td>
-      <td><input type="checkbox" data-k="cmp" data-c="${esc(c)}" ${isCmp(c)?'checked':''} ${key||draft.qty.has(c)?'disabled':''} title="${!key&&draft.qty.has(c)?'已勾選「數量」，因此一定會比對這一欄':''}"></td>
+      <td><input type="checkbox" data-k="cmp" data-c="${esc(c)}" ${isCmp(c)?'checked':''} ${key||draft.qty.has(c)?'disabled':''} title="${!key&&draft.qty.has(c)?esc(t('tipQtyLock')):''}"></td>
       <td><input type="checkbox" data-k="qty" data-c="${esc(c)}" ${draft.qty.has(c)?'checked':''}></td></tr>`;
   }).join('');
-  wrap.innerHTML = `<table class="cfgt"><thead><tr><th class="l">欄位</th><th class="l">範例值</th>
-    <th>Key${mini('key')}</th><th>比對${mini('cmp')}</th><th>數量${mini('qty')}</th></tr></thead>
-    <tbody>${rows || '<tr><td colspan="5" class="ph">沒有符合的欄位</td></tr>'}</tbody></table>`;
+  wrap.innerHTML = `<table class="cfgt"><thead><tr><th class="l">${t('thCol')}</th><th class="l">${t('thSample')}</th>
+    <th>${t('thKey')}${mini('key')}</th><th>${t('thCmp')}${mini('cmp')}</th><th>${t('thQty')}${mini('qty')}</th></tr></thead>
+    <tbody>${rows || `<tr><td colspan="5" class="ph">${t('noCols')}</td></tr>`}</tbody></table>`;
   wrap.scrollTop = top;
   updateCfgStatus();
 }
@@ -444,11 +585,11 @@ function updateCfgStatus(){
   const ks = COLS.filter(c => draft.key.has(c));
   const nc = COLS.filter(isCmp).length, nq = COLS.filter(c => draft.qty.has(c)).length;
   $('#cfgStatus').innerHTML =
-    `已選 Key <b>${ks.length}</b> 欄${ks.length ? '：<code>' + ks.map(esc).join(' + ') + '</code>' : '（請至少選一個）'}　比對 <b>${nc}</b> 欄　數量 <b>${nq}</b> 欄` +
-    (ks.length && !nc ? '<br><span style="color:var(--mod-t)">⚠ 尚未勾選任何比對欄位，只會判斷新增 / 刪除，不會偵測修改</span>' : '');
+    t('status', ks.length, ks.map(esc).join(' + '), nc, nq) +
+    (ks.length && !nc ? `<br><span style="color:var(--mod-t)">${t('warnNoCmp')}</span>` : '');
   $('#btnApply').disabled = !ks.length;
   const dirty = !applied || !(sameSet(applied.key, draft.key) && sameSet(applied.cmp, draft.cmp) && sameSet(applied.qty, draft.qty));
-  $('#pend').textContent = !(S.A.rows && S.B.rows) ? '' : (!applied ? '尚未比對' : (dirty ? '● 設定已變更，尚未套用' : ''));
+  $('#pend').textContent = !(S.A.rows && S.B.rows) ? '' : (!applied ? t('pendNone') : (dirty ? t('pendDirty') : ''));
 }
 $('#cfgTable').addEventListener('change', e => {
   const t = e.target; if (!t.dataset || !t.dataset.k) return;
@@ -492,12 +633,12 @@ function refresh(){
 function applyConfig(){
   if (!(S.A.rows && S.B.rows)) return;
   const keyCols = COLS.filter(c => draft.key.has(c));
-  if (!keyCols.length){ showMsg('請至少選擇一個 Key 欄位。', true); return; }
-  const miss = [...keyCols.filter(c => !S.A.headers.includes(c)).map(c => `<code>${esc(c)}</code>（Rev A 沒有）`),
-                ...keyCols.filter(c => !S.B.headers.includes(c)).map(c => `<code>${esc(c)}</code>（Rev B 沒有）`)];
-  if (miss.length){ showMsg(`Key 欄位 ${miss.join('、')}，請調整 Key 或標題列。`, true); return; }
+  if (!keyCols.length){ showMsg(t('errNeedKey'), true); return; }
+  const miss = [...keyCols.filter(c => !S.A.headers.includes(c)).map(c => `<code>${esc(c)}</code>${t('notInA')}`),
+                ...keyCols.filter(c => !S.B.headers.includes(c)).map(c => `<code>${esc(c)}</code>${t('notInB')}`)];
+  if (miss.length){ showMsg(t('errMissKey', miss.join(t('joiner'))), true); return; }
   showMsg('');
-  withBusy('比對中…', () => {
+  withBusy(t('comparing'), () => {
     applied = {key:new Set(draft.key), cmp:new Set([...draft.cmp, ...[...draft.qty].filter(c => !draft.key.has(c))]), qty:new Set(draft.qty)};
     runCompare();
     updateCfgStatus();
@@ -563,7 +704,7 @@ function compare(A, B, keyCols, cmpCols, qtyCols){
   const dups = {A:[], B:[]};
   for (const [side, g, rows] of [['A',gA],['B',gB]]){
     for (const [k, rs] of g) if (rs.length > 1)
-      dups[side].push({key: keyLabel(rs[0], keyCols) || '（Key 全空）', count: rs.length, rns: rs.map(r => r.rn)});
+      dups[side].push({key: keyLabel(rs[0], keyCols) || t('keyEmpty'), count: rs.length, rns: rs.map(r => r.rn)});
   }
   const mainEntries = [], aMatch = new Map(), delEntries = [];
   const mk = (a, b) => {
@@ -616,7 +757,7 @@ function compare(A, B, keyCols, cmpCols, qtyCols){
   for (const e of entries){
     counts[e.status]++;
     e.hay = [e.status, ...Object.values((e.b||e.a).v).map(normText), ...(e.a ? Object.values(e.a.v).map(normText) : [])].join('\u0001');
-    e.hay += '\u0001' + ({add:'新增',del:'刪除',mod:'修改',same:'未變'})[e.status];
+    e.hay += '\u0001' + ({add:'新增 added',del:'刪除 deleted',mod:'修改 modified',same:'未變 unchanged'})[e.status];
     for (const d of Object.values(e.deltas)) if (d !== null && d !== 0) e.hay += '\u0001' + fmtDelta(d);
     for (const c of e.changes) colCount[c.col] = (colCount[c.col]||0) + 1;
   }
@@ -640,19 +781,18 @@ function runCompare(){
 }
 
 /* ================= 顯示 ================= */
-const LABEL = {add:'新增', del:'刪除', mod:'修改', same:'未變'};
 function renderSummary(){
   const c = R.counts;
   $('#stats').innerHTML = `
-    <div class="stat add"><span class="lb">新增</span><div class="n">${c.add}</div></div>
-    <div class="stat del"><span class="lb">刪除</span><div class="n">${c.del}</div></div>
-    <div class="stat mod"><span class="lb">修改</span><div class="n">${c.mod}</div></div>
-    <div class="stat same"><span class="lb">未變</span><div class="n">${c.same}</div></div>
-    <div class="stat"><span class="lb">總列數</span><div class="n">${R.entries.length}</div></div>`;
+    <div class="stat add"><span class="lb">${t('stAdd')}</span><div class="n">${c.add}</div></div>
+    <div class="stat del"><span class="lb">${t('stDel')}</span><div class="n">${c.del}</div></div>
+    <div class="stat mod"><span class="lb">${t('stMod')}</span><div class="n">${c.mod}</div></div>
+    <div class="stat same"><span class="lb">${t('stSame')}</span><div class="n">${c.same}</div></div>
+    <div class="stat"><span class="lb">${t('totalRows')}</span><div class="n">${R.entries.length}</div></div>`;
   const cc = Object.entries(R.colCount).sort((a,b) => b[1]-a[1]);
   $('#colStat').innerHTML = cc.length
-    ? '修改欄位統計：' + cc.map(([k,v]) => `<b>${esc(k)}</b> ×${v}`).join('　')
-    : '沒有任何欄位被修改。';
+    ? t('colStatHead') + cc.map(([k,v]) => `<b>${esc(k)}</b> ×${v}`).join('　')
+    : t('noMod');
 }
 function renderWarnings(){
   const w = [];
@@ -660,28 +800,27 @@ function renderWarnings(){
     const d = R.dups[side];
     if (!d.length) continue;
     const rows = d.reduce((s,x) => s + x.count, 0);
-    w.push(`<details class="warn"><summary>⚠ ${S[side].label} 有 ${d.length} 組重複 Key（共 ${rows} 列）<span style="font-weight:400">　點擊展開明細</span></summary>
-      <div>同一檔案內 Key 相同的列不會被略過：會與另一檔的同 Key 列依「差異最少」優先一對一配對，多出來的列計為新增 / 刪除。建議把更多欄位勾進 Key 以降低重複。</div>
-      <ul>${d.slice(0,200).map(x => `<li><code>${esc(x.key)}</code> × ${x.count}　（Excel 列 ${x.rns.slice(0,12).join(', ')}${x.rns.length>12?' …共 '+x.rns.length+' 列':''}）</li>`).join('')}${d.length>200?`<li>…另有 ${d.length-200} 組</li>`:''}</ul></details>`);
+    w.push(`<details class="warn"><summary>${t('dupTitle', S[side].label, d.length, rows)}<span style="font-weight:400">　${t('expandDetail')}</span></summary>
+      <div>${t('dupBody')}</div>
+      <ul>${d.slice(0,200).map(x => `<li>${t('dupLi', esc(x.key), x.count, x.rns.slice(0,12).join(', '), x.rns.length>12 ? x.rns.length : 0)}</li>`).join('')}${d.length>200?`<li>${t('dupMoreGroups', d.length-200)}</li>`:''}</ul></details>`);
   }
   const tot = {A:S.A.rows.length, B:S.B.rows.length};
   const low = ['A','B'].filter(side => tot[side] && R.dups[side].reduce((n,x) => n + x.count, 0) / tot[side] > 0.2);
   if (low.length || R.byOrder)
-    w.unshift(`<details class="warn err"><summary>⚠ 目前的 Key 區分度太低，比對結果不可靠<span style="font-weight:400">　點擊展開說明</span></summary>
-      <div>${low.map(x => S[x].label).join('、') || '部分資料'}有大量列的 Key 相同。${R.byOrder ? `其中 <b>${R.byOrder}</b> 列因同 Key 數量過多，只能依出現順序配對，修改與新增 / 刪除的判斷可能不準。` : ''}
-      請在上方「比對設定」多勾選幾個能唯一識別一列的 Key 欄位（例如編號、代碼、尺寸、序號等），再按「套用並開始比對」。</div></details>`);
+    w.unshift(`<details class="warn err"><summary>${t('lowTitle')}<span style="font-weight:400">　${t('expandNote')}</span></summary>
+      <div>${t('lowBody', low.map(x => S[x].label).join(t('joiner')) || t('someData'), R.byOrder)}</div></details>`);
   const onlyA = S.A.headers.filter(c => !S.B.headers.includes(c)), onlyB = S.B.headers.filter(c => !S.A.headers.includes(c));
   if (onlyA.length || onlyB.length)
-    w.push(`<details class="warn"><summary>⚠ 兩檔欄位不完全相同<span style="font-weight:400">　點擊展開明細</span></summary>
-      ${onlyA.length?`<div>只在 Rev A：${onlyA.map(c=>'<code>'+esc(c)+'</code>').join(' ')}</div>`:''}
-      ${onlyB.length?`<div>只在 Rev B：${onlyB.map(c=>'<code>'+esc(c)+'</code>').join(' ')}</div>`:''}
-      <div>缺少的一側視為空值比對。</div></details>`);
+    w.push(`<details class="warn"><summary>${t('colDiffTitle')}<span style="font-weight:400">　${t('expandDetail')}</span></summary>
+      ${onlyA.length?`<div>${t('onlyInA')}${onlyA.map(c=>'<code>'+esc(c)+'</code>').join(' ')}</div>`:''}
+      ${onlyB.length?`<div>${t('onlyInB')}${onlyB.map(c=>'<code>'+esc(c)+'</code>').join(' ')}</div>`:''}
+      <div>${t('missingNote')}</div></details>`);
   $('#warns').innerHTML = w.join('');
 }
 function renderFilterChips(){
   const c = R.counts;
   $('#fchips').innerHTML =
-    [['all','全部',R.entries.length],['add','新增',c.add],['del','刪除',c.del],['mod','修改',c.mod],['same','未變',c.same]]
+    [['all',t('fAll'),R.entries.length],['add',t('stAdd'),c.add],['del',t('stDel'),c.del],['mod',t('stMod'),c.mod],['same',t('stSame'),c.same]]
     .map(([k,n,v]) => {
       const on = k === 'all' ? statusOn.size === 4 : statusOn.has(k);
       return `<button class="fchip ${k} ${on?'on':''}" data-s="${k}">${n} ${v}</button>`;
@@ -721,7 +860,7 @@ function computeDispCols(vis){
   const out = [];
   for (const c of vis){
     out.push({label:c, col:c, delta:false});
-    if (R.qtyCols.includes(c)) out.push({label:c + ' 差值', col:c, delta:true});
+    if (R.qtyCols.includes(c)) out.push({label:t('hDelta', c), col:c, delta:true});
   }
   return out;
 }
@@ -731,13 +870,13 @@ function deltaCell(e, c){
   if (d === null || d === undefined) return '<td class="dlt na"></td>';
   return `<td class="dlt ${d > 0 ? 'pos' : d < 0 ? 'neg' : 'zero'}">${d === 0 ? '0' : fmtDelta(d)}</td>`;
 }
-const D_MODES = [['all','全部'],['inc','增加 (+)'],['dec','減少 (−)'],['chg','有變動'],['zero','無變動']];
+const D_MODES = () => [['all',t('fAll')],['inc',t('dInc')],['dec',t('dDec')],['chg',t('dChg')],['zero',t('dZero')]];
 function renderDeltaTool(){
   if ($('#dtool').hidden) return;
-  $('#dmodes').innerHTML = D_MODES.map(([k,n]) => `<button class="fchip all ${dFilter.mode===k?'on':''}" data-d="${k}">${n}</button>`).join('');
+  $('#dmodes').innerHTML = D_MODES().map(([k,n]) => `<button class="fchip all ${dFilter.mode===k?'on':''}" data-d="${k}">${n}</button>`).join('');
   const c = dFilter.col; let sum = 0, inc = 0, dec = 0;
   for (const e of shown){ const d = e.deltas[c]; if (d == null) continue; sum += d; if (d > 0) inc++; else if (d < 0) dec++; }
-  $('#dsum').textContent = `目前顯示的列：差值合計 ${fmtDelta(sum)}（增加 ${inc} 列、減少 ${dec} 列）`;
+  $('#dsum').textContent = t('dSum', fmtDelta(sum), inc, dec);
 }
 $('#dmodes').addEventListener('click', e => {
   const m = e.target.dataset && e.target.dataset.d; if (!m) return;
@@ -762,9 +901,9 @@ function cellHTML(e, c){
   const ch = e.changes.find(x => x.col === c);
   const val = (e.b || e.a).v[c];
   if (!ch) return `<td>${esc(cellStr(val))}</td>`;
-  const emp = '<span class="empty">空</span>';
+  const emp = `<span class="empty">${t('empty')}</span>`;
   const o = ch.oldV.trim() === '' ? emp : esc(ch.oldV), n = ch.newV.trim() === '' ? emp : esc(ch.newV);
-  return `<td class="chg" title="舊：${esc(ch.oldV)} → 新：${esc(ch.newV)}"><span class="o">${o}</span><span class="arrow">→</span><span class="nv">${n}</span></td>`;
+  return `<td class="chg" title="${esc(t('oldNew', ch.oldV, ch.newV))}"><span class="o">${o}</span><span class="arrow">→</span><span class="nv">${n}</span></td>`;
 }
 function renderTable(){
   if (!R) return;
@@ -772,20 +911,20 @@ function renderTable(){
   shown = filteredEntries();
   visCols = computeVisCols(shown);
   dispCols = computeDispCols(visCols);
-  $('#cnt').textContent = `顯示 ${shown.length} / ${R.entries.length} 列`;
+  $('#cnt').textContent = t('showing', shown.length, R.entries.length);
   $('#btnExport').disabled = !R.entries.length;
   renderDeltaTool();
-  const head = `<tr><th class="cat">類別</th><th>差異欄位</th><th>A 列</th><th>B 列</th>${dispCols.map(d => d.delta
-    ? `<th class="dth" data-sort="${esc(d.col)}" title="點擊排序（由大到小 → 由小到大 → 取消）">${esc(d.label)} ${dSort.col===d.col ? (dSort.dir===-1?'▼':dSort.dir===1?'▲':'⇅') : '⇅'}</th>`
+  const head = `<tr><th class="cat">${t('hStatus')}</th><th>${t('hChanged')}</th><th>${t('hRowA')}</th><th>${t('hRowB')}</th>${dispCols.map(d => d.delta
+    ? `<th class="dth" data-sort="${esc(d.col)}" title="${t('sortTip')}">${esc(d.label)} ${dSort.col===d.col ? (dSort.dir===-1?'▼':dSort.dir===1?'▲':'⇅') : '⇅'}</th>`
     : `<th class="${R.keyCols.includes(d.col)?'key':''}">${esc(d.label)}</th>`).join('')}</tr>`;
   const part = shown.slice(0, pageSize);
-  const body = part.map(e => `<tr class="${e.status}"><td class="cat">${LABEL[e.status]}</td>
+  const body = part.map(e => `<tr class="${e.status}"><td class="cat">${STATUS()[e.status]}</td>
     <td>${esc(e.changes.map(x=>x.col).join(', '))}</td><td class="rn">${e.a?e.a.rn:''}</td><td class="rn">${e.b?e.b.rn:''}</td>
     ${dispCols.map(d => d.delta ? deltaCell(e, d.col) : cellHTML(e, d.col)).join('')}</tr>`).join('');
   $('#tw').innerHTML = shown.length
     ? `<table><thead>${head}</thead><tbody>${body}</tbody></table>` +
-      (shown.length > pageSize ? `<div class="more"><button class="fchip" id="btnMore">再載入 500 列（尚有 ${shown.length-pageSize} 列）</button></div>` : '')
-    : '<div class="ph">沒有符合條件的列</div>';
+      (shown.length > pageSize ? `<div class="more"><button class="fchip" id="btnMore">${t('loadMore', shown.length-pageSize)}</button></div>` : '')
+    : `<div class="ph">${t('noRows')}</div>`;
   const m = $('#btnMore'); if (m) m.onclick = () => { pageSize += 500; renderTable(); };
 }
 
@@ -877,11 +1016,11 @@ function exportXlsx(){
   if (!R) return;
   const list = $('#expFiltered').checked ? shown : R.entries;
   const cols = dispCols.length ? dispCols : COLS.map(c => ({label:c, col:c, delta:false}));
-  const hdr = ['類別','差異欄位','A 列','B 列', ...cols.map(d => d.label)].map(v => ({v, s:STY.head}));
+  const hdr = [t('hStatus'),t('hChanged'),t('hRowA'),t('hRowB'), ...cols.map(d => d.label)].map(v => ({v, s:STY.head}));
   const rows = [hdr];
   for (const e of list){
     const base = e.status === 'add' ? STY.add : e.status === 'del' ? STY.del : STY.plain;
-    const line = [{v:LABEL[e.status], s: e.status === 'mod' ? STY.mod : base},
+    const line = [{v:STATUS()[e.status], s: e.status === 'mod' ? STY.mod : base},
       {v:e.changes.map(c => c.col).join(', '), s:base},
       {v:e.a ? e.a.rn : '', s:base}, {v:e.b ? e.b.rn : '', s:base}];
     for (const d of cols){
@@ -892,7 +1031,7 @@ function exportXlsx(){
         continue;
       }
       const ch = e.changes.find(x => x.col === c);
-      if (ch) line.push({v:`${ch.oldV.trim()===''?'(空)':ch.oldV} → ${ch.newV.trim()===''?'(空)':ch.newV}`, s:STY.mod});
+      if (ch) line.push({v:`${ch.oldV.trim()===''?t('xEmpty'):ch.oldV} → ${ch.newV.trim()===''?t('xEmpty'):ch.newV}`, s:STY.mod});
       else{
         const raw = (e.b || e.a).v[c];
         line.push({v: raw instanceof Date ? cellStr(raw) : (raw == null ? '' : raw), s:base});
@@ -902,21 +1041,21 @@ function exportXlsx(){
   }
   const c = R.counts;
   const sum = [
-    [{v:'項目',s:STY.head},{v:'內容',s:STY.head}],
-    [{v:'Rev A（舊版）',s:STY.bold}, `${S.A.name}　[${S.A.sheet}]　標題列第 ${S.A.hr} 列　${S.A.rows.length} 筆`],
-    [{v:'Rev B（新版）',s:STY.bold}, `${S.B.name}　[${S.B.sheet}]　標題列第 ${S.B.hr} 列　${S.B.rows.length} 筆`],
-    [{v:'Key 欄位',s:STY.bold}, R.keyCols.join(' + ')],
-    [{v:'新增',s:STY.add}, c.add], [{v:'刪除',s:STY.del}, c.del], [{v:'修改',s:STY.mod}, c.mod], [{v:'未變',s:STY.bold}, c.same],
-    [{v:'匯出範圍',s:STY.bold}, $('#expFiltered').checked ? `目前篩選結果（${list.length} 列）` : `全部（${list.length} 列）`],
-    [],[{v:'修改欄位統計',s:STY.head},{v:'次數',s:STY.head}],
+    [{v:t('xItem'),s:STY.head},{v:t('xValue'),s:STY.head}],
+    [{v:t('revA'),s:STY.bold}, t('xFile', S.A.name, S.A.sheet, S.A.hr, S.A.rows.length)],
+    [{v:t('revB'),s:STY.bold}, t('xFile', S.B.name, S.B.sheet, S.B.hr, S.B.rows.length)],
+    [{v:t('xKey'),s:STY.bold}, R.keyCols.join(' + ')],
+    [{v:t('stAdd'),s:STY.add}, c.add], [{v:t('stDel'),s:STY.del}, c.del], [{v:t('stMod'),s:STY.mod}, c.mod], [{v:t('stSame'),s:STY.bold}, c.same],
+    [{v:t('xScope'),s:STY.bold}, $('#expFiltered').checked ? t('xScopeF', list.length) : t('xScopeA', list.length)],
+    [],[{v:t('xColStat'),s:STY.head},{v:t('xCount'),s:STY.head}],
     ...Object.entries(R.colCount).sort((a,b) => b[1]-a[1]).map(([k,v]) => [k, v]),
-    [],[{v:'重複 Key 警告',s:STY.head},{v:'來源 / 數量 / Excel 列',s:STY.head}],
-    ...['A','B'].flatMap(side => R.dups[side].map(d => [d.key, `Rev ${side} × ${d.count}（列 ${d.rns.join(', ')}）`])),
+    [],[{v:t('xDup'),s:STY.head},{v:t('xDupHead'),s:STY.head}],
+    ...['A','B'].flatMap(side => R.dups[side].map(d => [d.key, t('xDupLine', side, d.count, d.rns.join(', '))])),
   ];
-  if (!R.dups.A.length && !R.dups.B.length) sum.push(['（無）','']);
+  if (!R.dups.A.length && !R.dups.B.length) sum.push([t('xNone'),'']);
   const blob = buildXlsx([
-    {name:'比對結果', rows, freeze:[1,1], filter:true},
-    {name:'摘要', rows:sum},
+    {name:t('xSheetRes'), rows, freeze:[1,1], filter:true},
+    {name:t('xSheetSum'), rows:sum},
   ]);
   const d = new Date(), p = n => String(n).padStart(2,'0');
   const fn = `compare_result_${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}.xlsx`;
@@ -928,7 +1067,26 @@ function exportXlsx(){
 }
 $('#btnExport').addEventListener('click', exportXlsx);
 
+/* ================= 語言切換 ================= */
+function applyLang(){
+  document.documentElement.lang = lang === 'zh' ? 'zh-Hant' : 'en';
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.innerHTML = t(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
+  document.querySelectorAll('[data-i18n-title]').forEach(el => { el.title = t(el.dataset.i18nTitle); });
+  $('#langCode').textContent = t('langTo'); $('#langBtn').title = t('langTip'); $('#langBtn').setAttribute('aria-label', t('langTip'));
+  if ($('#busy').hidden) $('#busyT').textContent = t('busyDefault');
+  renderSlotStatic(S.A); renderSlotStatic(S.B);
+  if (S.A.rows && S.B.rows) renderCfg();
+  if (R){ renderSummary(); renderWarnings(); renderTable(); }
+}
+$('#langBtn').addEventListener('click', () => {
+  lang = lang === 'zh' ? 'en' : 'zh';
+  try{ localStorage.setItem('revdiff-lang', lang); }catch(e){}
+  applyLang();
+});
+
 buildSlotUI(S.A); buildSlotUI(S.B);
+applyLang();
 </script>
 </body>
 </html>
