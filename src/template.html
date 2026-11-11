@@ -87,6 +87,14 @@ td.chg .dl{display:inline-block;margin-left:6px;padding:0 5px;border-radius:4px;
 .empty{font-style:italic;opacity:.7}
 .rn{color:var(--muted);text-align:right}
 .more{text-align:center;padding:10px}
+#busy{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center}
+#busy[hidden]{display:none}
+#busy .box{background:var(--panel);color:var(--text);border-radius:12px;padding:22px 34px;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,.35)}
+#busy .t{font-size:17px;font-weight:700}
+#busy .s{color:var(--muted);font-size:12px;margin-top:6px}
+#busy .bar{height:4px;margin-top:14px;border-radius:2px;background:var(--line);overflow:hidden;position:relative}
+#busy .bar i{position:absolute;inset:0 auto 0 0;width:35%;background:var(--accent);animation:slide 1.1s ease-in-out infinite alternate}
+@keyframes slide{to{left:65%}}
 .ph{color:var(--muted);text-align:center;padding:30px}
 </style>
 </head>
@@ -139,6 +147,7 @@ td.chg .dl{display:inline-block;margin-left:6px;padding:0 5px;border-radius:4px;
   </section>
 </main>
 
+<div id="busy" hidden><div class="box"><div class="t" id="busyT">處理中…</div><div class="s">檔案較大時需要幾秒到數十秒，請稍候，畫面暫時沒反應是正常的</div><div class="bar"><i></i></div></div></div>
 <script>/*__SHEETJS__*/</script>
 <script>
 'use strict';
@@ -199,6 +208,17 @@ let visCols = [];       // 目前顯示的欄位
 let statusOn = new Set(['add','del','mod','same']);
 let pageSize = 500;
 
+/* ================= 處理中提示 ================= */
+/* 先顯示提示並讓瀏覽器畫出來，再執行耗時工作；結束後一定會關閉 */
+function showBusy(msg){ $('#busyT').textContent = msg || '處理中…'; $('#busy').hidden = false; }
+function hideBusy(){ $('#busy').hidden = true; }
+const nextPaint = () => new Promise(r => requestAnimationFrame(() => setTimeout(r, 0)));
+async function withBusy(msg, fn){
+  showBusy(msg);
+  await nextPaint();
+  try{ return fn(); } finally{ hideBusy(); }
+}
+
 /* ================= 讀檔 ================= */
 function buildSlotUI(slot){
   const el = document.createElement('div');
@@ -219,16 +239,18 @@ function buildSlotUI(slot){
   ['dragenter','dragover'].forEach(e => drop.addEventListener(e, ev => {ev.preventDefault(); drop.classList.add('over');}));
   ['dragleave','drop'].forEach(e => drop.addEventListener(e, ev => {ev.preventDefault(); drop.classList.remove('over');}));
   drop.addEventListener('drop', ev => { const f = ev.dataTransfer.files[0]; if (f) loadFile(slot, f); });
-  $('#sheet'+slot.id).addEventListener('change', e => { slot.sheet = e.target.value; slot.aoa = null; parseSlot(slot, true); refresh(); });
-  $('#hr'+slot.id).addEventListener('change', e => { slot.hr = Math.max(1, parseInt(e.target.value)||1); parseSlot(slot, false); refresh(); });
+  $('#sheet'+slot.id).addEventListener('change', e => { slot.sheet = e.target.value; slot.aoa = null; withBusy('讀取工作表中…', () => { parseSlot(slot, true); refresh(); }); });
+  $('#hr'+slot.id).addEventListener('change', e => { slot.hr = Math.max(1, parseInt(e.target.value)||1); withBusy('讀取資料中…', () => { parseSlot(slot, false); refresh(); }); });
 }
 function showMsg(html, err){
   $('#msg').innerHTML = html ? `<div class="warn ${err?'err':''}">${html}</div>` : '';
 }
 function loadFile(slot, file){
   const rd = new FileReader();
-  rd.onerror = () => showMsg(`無法讀取檔案 <code>${esc(file.name)}</code>`, true);
-  rd.onload = () => {
+  showBusy(`讀取 ${file.name} 中…`);
+  rd.onerror = () => { hideBusy(); showMsg(`無法讀取檔案 <code>${esc(file.name)}</code>`, true); };
+  rd.onload = async () => {
+    await nextPaint();
     try{
       const wb = XLSX.read(new Uint8Array(rd.result), {type:'array', cellDates:true});
       if (!wb.SheetNames.length) throw new Error('檔案內沒有工作表');
@@ -244,7 +266,7 @@ function loadFile(slot, file){
       refresh();
     }catch(e){
       showMsg(`讀取 <code>${esc(file.name)}</code> 失敗：${esc(e.message||e)}（請確認是有效的 .xlsx，且未加密）`, true);
-    }
+    }finally{ hideBusy(); }
   };
   rd.readAsArrayBuffer(file);
 }
@@ -312,13 +334,13 @@ function renderCfg(){
 $('#keyChips').addEventListener('click', e => {
   const c = e.target.dataset && e.target.dataset.c; if (c === undefined) return;
   cfg.key.has(c) ? cfg.key.delete(c) : cfg.key.add(c);
-  refresh(true);
+  withBusy('比對中…', () => refresh(true));
 });
 $('#colGrid').addEventListener('change', e => {
   const t = e.target; if (!t.dataset.k) return;
   const set = cfg[t.dataset.k];
   t.checked ? set.add(t.dataset.c) : set.delete(t.dataset.c);
-  runCompare();
+  withBusy('比對中…', runCompare);
 });
 ['optHideEmpty','optOnlyDiff'].forEach(id => $('#'+id).addEventListener('change', renderTable));
 
