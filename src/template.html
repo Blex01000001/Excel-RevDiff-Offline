@@ -240,6 +240,7 @@ zh:{
   sheetLbl:'工作表', hrPre:'標題列在第', hrPost:'列',
   readSheet:'讀取工作表中…', readData:'讀取資料中…', readFile:'讀取 {0} 中…', comparing:'比對中…',
   errRead:'無法讀取檔案 <code>{0}</code>', errNoSheet:'檔案內沒有工作表',
+  errNotExcel:'<code>{0}</code> 不是有效的 Excel 檔案（內容與副檔名不符，或不是試算表）。請選擇 .xlsx .xlsm .xlsb .xls .ods .csv。',
   errParse:'讀取 <code>{0}</code> 失敗：{1}（請確認是有效的 Excel 檔，且未加密）',
   hrOut:'標題列超出範圍',
   meta:(n,c,h)=>`${n} 筆資料列、${c} 欄（標題列：${h}）`,
@@ -295,6 +296,7 @@ en:{
   sheetLbl:'Sheet', hrPre:'Header row', hrPost:'',
   readSheet:'Reading sheet…', readData:'Reading data…', readFile:'Reading {0}…', comparing:'Comparing…',
   errRead:'Cannot read file <code>{0}</code>', errNoSheet:'The file contains no sheets',
+  errNotExcel:'<code>{0}</code> is not a valid Excel file (its content does not match the extension, or it is not a spreadsheet). Please choose .xlsx .xlsm .xlsb .xls .ods or .csv.',
   errParse:'Failed to read <code>{0}</code>: {1} (make sure it is a valid, unencrypted Excel file)',
   hrOut:'Header row is out of range',
   meta:(n,c,h)=>`${n} data rows, ${c} columns (headers: ${h})`,
@@ -451,6 +453,20 @@ function buildSlotUI(slot){
 function showMsg(html, err){
   $('#msg').innerHTML = html ? `<div class="warn ${err?'err':''}">${html}</div>` : '';
 }
+/* 載入前先看檔案開頭：zip(PK)、舊版 xls(D0CF11E0) 或純文字（csv / xml / 以 xls 命名的 html）才放行 */
+function looksLikeExcel(buf, name){
+  const u8 = new Uint8Array(buf, 0, Math.min(buf.byteLength, 2048));
+  const ext = (name.split('.').pop() || '').toLowerCase();
+  if (u8.length < 4) return false;
+  const isZip = u8[0] === 0x50 && u8[1] === 0x4B;
+  const isOle = u8[0] === 0xD0 && u8[1] === 0xCF && u8[2] === 0x11 && u8[3] === 0xE0;
+  if (isZip) return ['xlsx','xlsm','xlsb','ods'].includes(ext);
+  if (isOle) return ['xls','xlsb'].includes(ext);
+  if (!['csv','xml','fods','xls'].includes(ext)) return false;
+  let bad = 0;                                    // 純文字：不可含 NUL 或大量控制字元
+  for (const c of u8) if (c === 0 || (c < 9) || (c > 13 && c < 32)) bad++;
+  return bad === 0;
+}
 function loadFile(slot, file){
   const rd = new FileReader();
   showBusy(t('readFile', file.name));
@@ -458,6 +474,7 @@ function loadFile(slot, file){
   rd.onload = async () => {
     await nextPaint();
     try{
+      if (!looksLikeExcel(rd.result, file.name)){ showMsg(t('errNotExcel', esc(file.name)), true); return; }
       const wb = XLSX.read(new Uint8Array(rd.result), {type:'array', cellDates:true});
       if (!wb.SheetNames.length) throw new Error(t('errNoSheet'));
       slot.wb = wb; slot.name = file.name;
