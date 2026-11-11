@@ -87,7 +87,6 @@ td.chg{background:var(--mod)!important;color:var(--mod-t)!important}
 td.chg .o{color:var(--old);text-decoration:line-through;opacity:.9}
 td.chg .arrow{margin:0 4px;opacity:.7}
 td.chg .nv{font-weight:700}
-td.chg .dl{display:inline-block;margin-left:6px;padding:0 5px;border-radius:4px;background:rgba(0,0,0,.12);font-weight:700}
 .empty{font-style:italic;opacity:.7}
 .rn{color:var(--muted);text-align:right}
 .more{text-align:center;padding:10px}
@@ -764,7 +763,7 @@ function cellHTML(e, c){
   if (!ch) return `<td>${esc(cellStr(val))}</td>`;
   const emp = '<span class="empty">空</span>';
   const o = ch.oldV.trim() === '' ? emp : esc(ch.oldV), n = ch.newV.trim() === '' ? emp : esc(ch.newV);
-  return `<td class="chg" title="舊：${esc(ch.oldV)} → 新：${esc(ch.newV)}"><span class="o">${o}</span><span class="arrow">→</span><span class="nv">${n}</span>${ch.delta !== null ? `<span class="dl">${fmtDelta(ch.delta)}</span>` : ''}</td>`;
+  return `<td class="chg" title="舊：${esc(ch.oldV)} → 新：${esc(ch.newV)}"><span class="o">${o}</span><span class="arrow">→</span><span class="nv">${n}</span></td>`;
 }
 function renderTable(){
   if (!R) return;
@@ -892,7 +891,7 @@ function exportXlsx(){
         continue;
       }
       const ch = e.changes.find(x => x.col === c);
-      if (ch) line.push({v:`${ch.oldV.trim()===''?'(空)':ch.oldV} → ${ch.newV.trim()===''?'(空)':ch.newV}${ch.delta!==null?' ('+fmtDelta(ch.delta)+')':''}`, s:STY.mod});
+      if (ch) line.push({v:`${ch.oldV.trim()===''?'(空)':ch.oldV} → ${ch.newV.trim()===''?'(空)':ch.newV}`, s:STY.mod});
       else{
         const raw = (e.b || e.a).v[c];
         line.push({v: raw instanceof Date ? cellStr(raw) : (raw == null ? '' : raw), s:base});
