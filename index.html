@@ -4,15 +4,19 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Excel RevDiff Offline</title>
+<script>(function(){var th='dark';try{var v=localStorage.getItem('revdiff-theme');if(v==='light'||v==='dark')th=v;}catch(e){}document.documentElement.setAttribute('data-theme',th);})();</script>
 <style>
-:root{
+:root,:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#12161d;--panel:#1b212b;--text:#e6e9ef;--muted:#98a2b3;--line:#323b4a;--accent:#7aa2f7;--accent-soft:#25324d;
+  --add:#1c3d27;--add-t:#8fe3a6;--del:#4a2022;--del-t:#ff9c9c;--mod:#5a4a10;--mod-t:#ffe38a;--same-t:#b5bdcb;
+  --old:#ff9c8f;--on-accent:#101521;
+}
+:root[data-theme="light"]{
+  color-scheme:light;
   --bg:#f4f6f9;--panel:#fff;--text:#1d2433;--muted:#667085;--line:#d9dee7;--accent:#2457c5;--accent-soft:#e6edfb;
   --add:#d7f2dd;--add-t:#17642b;--del:#fbd9d9;--del-t:#a12121;--mod:#fff1b3;--mod-t:#7a5a00;--same-t:#475467;
   --old:#b42318;--on-accent:#fff;
-}
-@media (prefers-color-scheme:dark){
-  :root{--bg:#12161d;--panel:#1b212b;--text:#e6e9ef;--muted:#98a2b3;--line:#323b4a;--accent:#7aa2f7;--accent-soft:#25324d;
-  --add:#1c3d27;--add-t:#8fe3a6;--del:#4a2022;--del-t:#ff9c9c;--mod:#5a4a10;--mod-t:#ffe38a;--same-t:#b5bdcb;--old:#ff9c8f;--on-accent:#101521}
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -24,6 +28,8 @@ header .sub{color:var(--muted);font-size:12px}
 .langbtn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:999px;padding:5px 12px 5px 9px;font:inherit;font-size:13px;cursor:pointer}
 .langbtn:hover{border-color:var(--accent);color:var(--accent)}
 .langbtn svg{width:18px;height:18px;flex:none}
+.iconbtn{padding:5px 8px}
+:root[data-theme="dark"] .ic-moon,:root:not([data-theme="light"]) .ic-moon,:root[data-theme="light"] .ic-sun{display:none}
 .card{scroll-margin-top:72px}
 main{padding:16px 20px;max-width:1800px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}
@@ -142,7 +148,8 @@ th.dth:hover{color:var(--accent)}
 </head>
 <body>
 <header><h1>Excel RevDiff Offline</h1><span class="ver" title="Version">v1.0.0</span><span class="sub" data-i18n="subtitle"></span><span class="sp"></span>
-  <button class="langbtn" id="langBtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M2.5 12h19M12 2.5c2.6 2.7 3.9 5.9 3.9 9.5s-1.3 6.8-3.9 9.5c-2.6-2.7-3.9-5.9-3.9-9.5S9.4 5.2 12 2.5z"/></svg><span id="langCode"></span></button></header>
+  <button class="langbtn" id="langBtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M2.5 12h19M12 2.5c2.6 2.7 3.9 5.9 3.9 9.5s-1.3 6.8-3.9 9.5c-2.6-2.7-3.9-5.9-3.9-9.5S9.4 5.2 12 2.5z"/></svg><span id="langCode"></span></button>
+  <button class="langbtn iconbtn" id="themeBtn" type="button"><svg class="ic-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2.5M12 19.5V22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M2 12h2.5M19.5 12H22M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg><svg class="ic-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button></header>
 <main>
   <section class="card">
     <h2><span class="step">1</span><span data-i18n="s1"></span></h2>
@@ -242,7 +249,7 @@ zh:{
   optHideEmpty:'隱藏全空欄位', optOnlyDiff:'只顯示 Key 與有差異的欄位',
   dTitle:'數量差值', phQ:'搜尋任何欄位（可用空白分隔多個關鍵字）', expFiltered:'僅匯出目前篩選結果', btnExport:'匯出 .xlsx',
   busyDefault:'處理中…', busyNote:'檔案較大時需要幾秒到數十秒，請稍候，畫面暫時沒反應是正常的',
-  langTo:'EN', langTip:'Switch to English',
+  langTo:'EN', langTip:'Switch to English', themeToLight:'切換為亮色主題', themeToDark:'切換為暗色主題',
   revA:'Rev A（舊版）', revB:'Rev B（新版）',
   dropHint:'點擊選擇檔案，或把 Excel 檔拖曳到這裡', dropFmt:'支援 .xlsx .xlsm .xlsb .xls .ods .csv',
   sheetLbl:'工作表', hrPre:'標題列在第', hrPost:'列',
@@ -297,7 +304,7 @@ en:{
   optHideEmpty:'Hide empty columns', optOnlyDiff:'Show only Key and changed columns',
   dTitle:'Quantity delta', phQ:'Search any column (space-separated keywords)', expFiltered:'Export current filter only', btnExport:'Export .xlsx',
   busyDefault:'Processing…', busyNote:'Large files can take several seconds up to a minute. Please wait — the page may look unresponsive meanwhile.',
-  langTo:'中文', langTip:'切換為中文',
+  langTo:'中文', langTip:'切換為中文', themeToLight:'Switch to light theme', themeToDark:'Switch to dark theme',
   revA:'Rev A (old)', revB:'Rev B (new)',
   dropHint:'Click to choose a file, or drag an Excel file here', dropFmt:'Supports .xlsx .xlsm .xlsb .xls .ods .csv',
   sheetLbl:'Sheet', hrPre:'Header row', hrPost:'',
@@ -1084,12 +1091,26 @@ function exportXlsx(){
 }
 $('#btnExport').addEventListener('click', exportXlsx);
 
+/* ================= 主題切換（預設暗色） ================= */
+function curTheme(){ return document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark'; }
+function updateThemeBtn(){
+  const tip = t(curTheme() === 'dark' ? 'themeToLight' : 'themeToDark');
+  $('#themeBtn').title = tip; $('#themeBtn').setAttribute('aria-label', tip);
+}
+$('#themeBtn').addEventListener('click', () => {
+  const next = curTheme() === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  try{ localStorage.setItem('revdiff-theme', next); }catch(e){}
+  updateThemeBtn();
+});
+
 /* ================= 語言切換 ================= */
 function applyLang(){
   document.documentElement.lang = lang === 'zh' ? 'zh-Hant' : 'en';
   document.querySelectorAll('[data-i18n]').forEach(el => { el.innerHTML = t(el.dataset.i18n); });
   document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
   document.querySelectorAll('[data-i18n-title]').forEach(el => { el.title = t(el.dataset.i18nTitle); });
+  updateThemeBtn();
   $('#langCode').textContent = t('langTo'); $('#langBtn').title = t('langTip'); $('#langBtn').setAttribute('aria-label', t('langTip'));
   if ($('#busy').hidden) $('#busyT').textContent = t('busyDefault');
   renderSlotStatic(S.A); renderSlotStatic(S.B);
