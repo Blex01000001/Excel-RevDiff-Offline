@@ -46,8 +46,9 @@ summary{cursor:pointer;color:var(--accent)}
 .opts{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:8px}
 .opts label{display:flex;gap:6px;align-items:center;cursor:pointer}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
-.stat{border-radius:8px;padding:10px 14px;border:1px solid var(--line)}
-.stat .n{font-size:26px;font-weight:700;line-height:1.1}
+.stat{position:relative;min-height:92px;border-radius:8px;padding:10px 14px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center}
+.stat .lb{position:absolute;top:8px;left:12px;font-size:13px}
+.stat .n{font-size:30px;font-weight:700;line-height:1.1}
 .stat.add{background:var(--add);color:var(--add-t)}.stat.del{background:var(--del);color:var(--del-t)}
 .stat.mod{background:var(--mod);color:var(--mod-t)}.stat.same{color:var(--same-t)}
 .colstat{margin-top:10px;font-size:13px;color:var(--muted)}
@@ -621,11 +622,11 @@ const LABEL = {add:'新增', del:'刪除', mod:'修改', same:'未變'};
 function renderSummary(){
   const c = R.counts;
   $('#stats').innerHTML = `
-    <div class="stat add"><div class="n">${c.add}</div>新增</div>
-    <div class="stat del"><div class="n">${c.del}</div>刪除</div>
-    <div class="stat mod"><div class="n">${c.mod}</div>修改</div>
-    <div class="stat same"><div class="n">${c.same}</div>未變</div>
-    <div class="stat"><div class="n">${R.entries.length}</div>總列數</div>`;
+    <div class="stat add"><span class="lb">新增</span><div class="n">${c.add}</div></div>
+    <div class="stat del"><span class="lb">刪除</span><div class="n">${c.del}</div></div>
+    <div class="stat mod"><span class="lb">修改</span><div class="n">${c.mod}</div></div>
+    <div class="stat same"><span class="lb">未變</span><div class="n">${c.same}</div></div>
+    <div class="stat"><span class="lb">總列數</span><div class="n">${R.entries.length}</div></div>`;
   const cc = Object.entries(R.colCount).sort((a,b) => b[1]-a[1]);
   $('#colStat').innerHTML = cc.length
     ? '修改欄位統計：' + cc.map(([k,v]) => `<b>${esc(k)}</b> ×${v}`).join('　')
