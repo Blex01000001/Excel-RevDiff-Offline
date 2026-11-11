@@ -407,6 +407,15 @@ function sampleOf(c){
   }
   sampleCache.set(c, v); return v;
 }
+/* 防呆：勾了「數量」的欄位一定要比對，否則算不出差值 */
+const isCmp = c => !draft.key.has(c) && (draft.cmp.has(c) || draft.qty.has(c));
+function syncCmpBox(c){
+  const cb = document.querySelector(`#cfgTable input[data-k="cmp"][data-c="${CSS.escape(c)}"]`);
+  if (!cb) return;
+  cb.checked = isCmp(c);
+  cb.disabled = draft.key.has(c) || draft.qty.has(c);
+  cb.title = !draft.key.has(c) && draft.qty.has(c) ? '已勾選「數量」，因此一定會比對這一欄' : '';
+}
 const sameSet = (x, y) => x.size === y.size && [...x].every(v => y.has(v));
 function renderCfg(){
   $('#cfgCard').hidden = !(S.A.rows && S.B.rows);
@@ -422,7 +431,7 @@ function renderCfg(){
       <td class="nm l">${esc(c)}${onlyA?'<span class="tag">僅 Rev A</span>':''}${onlyB?'<span class="tag">僅 Rev B</span>':''}</td>
       <td class="smp l" title="${esc(sampleOf(c))}">${esc(sampleOf(c))}</td>
       <td><input type="checkbox" data-k="key" data-c="${esc(c)}" ${key?'checked':''}></td>
-      <td><input type="checkbox" data-k="cmp" data-c="${esc(c)}" ${!key&&draft.cmp.has(c)?'checked':''} ${key?'disabled':''}></td>
+      <td><input type="checkbox" data-k="cmp" data-c="${esc(c)}" ${isCmp(c)?'checked':''} ${key||draft.qty.has(c)?'disabled':''} title="${!key&&draft.qty.has(c)?'已勾選「數量」，因此一定會比對這一欄':''}"></td>
       <td><input type="checkbox" data-k="qty" data-c="${esc(c)}" ${draft.qty.has(c)?'checked':''}></td></tr>`;
   }).join('');
   wrap.innerHTML = `<table class="cfgt"><thead><tr><th class="l">欄位</th><th class="l">範例值</th>
@@ -434,7 +443,7 @@ function renderCfg(){
 /* 只更新狀態列與「尚未套用」提示，不重畫表格（保留捲動位置） */
 function updateCfgStatus(){
   const ks = COLS.filter(c => draft.key.has(c));
-  const nc = COLS.filter(c => !draft.key.has(c) && draft.cmp.has(c)).length, nq = COLS.filter(c => draft.qty.has(c)).length;
+  const nc = COLS.filter(isCmp).length, nq = COLS.filter(c => draft.qty.has(c)).length;
   $('#cfgStatus').innerHTML =
     `已選 Key <b>${ks.length}</b> 欄${ks.length ? '：<code>' + ks.map(esc).join(' + ') + '</code>' : '（請至少選一個）'}　比對 <b>${nc}</b> 欄　數量 <b>${nq}</b> 欄` +
     (ks.length && !nc ? '<br><span style="color:var(--mod-t)">⚠ 尚未勾選任何比對欄位，只會判斷新增 / 刪除，不會偵測修改</span>' : '');
@@ -444,20 +453,21 @@ function updateCfgStatus(){
 }
 $('#cfgTable').addEventListener('change', e => {
   const t = e.target; if (!t.dataset || !t.dataset.k) return;
-  t.checked ? draft[t.dataset.k].add(t.dataset.c) : draft[t.dataset.k].delete(t.dataset.c);
-  if (t.dataset.k === 'key'){
-    const tr = t.closest('tr'); tr.classList.toggle('iskey', t.checked);
-    const cb = tr.querySelector('input[data-k="cmp"]');
-    cb.disabled = t.checked; cb.checked = !t.checked && draft.cmp.has(t.dataset.c);
-  }
+  const c = t.dataset.c;
+  t.checked ? draft[t.dataset.k].add(c) : draft[t.dataset.k].delete(c);
+  if (t.dataset.k === 'qty' && t.checked) draft.cmp.add(c);   // 數量 → 一併勾選比對
+  if (t.dataset.k === 'key') t.closest('tr').classList.toggle('iskey', t.checked);
+  syncCmpBox(c);
   updateCfgStatus();
 });
 $('#cfgTable').addEventListener('click', e => {
   const a = e.target.closest('a[data-act]'); if (!a) return;
   const k = a.dataset.k, q = normText(colFilter);
   for (const c of COLS.filter(c => !q || normText(c).includes(q))){
-    if (a.dataset.act === 'all'){ if (k !== 'cmp' || !draft.key.has(c)) draft[k].add(c); }
-    else draft[k].delete(c);
+    if (a.dataset.act === 'all'){
+      if (k !== 'cmp' || !draft.key.has(c)) draft[k].add(c);
+      if (k === 'qty' && !draft.key.has(c)) draft.cmp.add(c);          // 數量 → 一併勾選比對
+    } else if (!(k === 'cmp' && draft.qty.has(c))) draft[k].delete(c);  // 有勾數量的欄位不能取消比對
   }
   renderCfg();
 });
@@ -489,7 +499,7 @@ function applyConfig(){
   if (miss.length){ showMsg(`Key 欄位 ${miss.join('、')}，請調整 Key 或標題列。`, true); return; }
   showMsg('');
   withBusy('比對中…', () => {
-    applied = {key:new Set(draft.key), cmp:new Set(draft.cmp), qty:new Set(draft.qty)};
+    applied = {key:new Set(draft.key), cmp:new Set([...draft.cmp, ...[...draft.qty].filter(c => !draft.key.has(c))]), qty:new Set(draft.qty)};
     runCompare();
     updateCfgStatus();
   }).then(() => { $('#sumCard').scrollIntoView({behavior:'smooth', block:'start'}); });
