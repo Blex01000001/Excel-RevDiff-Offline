@@ -7,7 +7,6 @@
 ## 待辦
 
 1. 【使用者】可刪除先前為了檢查 github.io 而建立的個人雲端環境 `excel-revdiff-offline`（只多允許 `blex01000001.github.io`）。
-2. 【先討論】沒有自動化測試：已提出方案（Playwright 端對端測試放 `tests/`＋`npm test`，並以 GitHub Actions 檢查 `index.html` 是否已重新建置），等使用者決定範圍、是否接受 `package.json`／Actions、效能測試是否獨立；決定前不要動手。
 
 ## 已知問題／限制
 
@@ -21,6 +20,7 @@
 - 標題列自動偵測只看前 30 列；日期以 `yyyy-mm-dd` 字串比對。
 - 匯出檔名刻意用英文（`compare_result_日期_時間.xlsx`），因為 headless Chromium 下中文檔名會失效。
 - 舊瀏覽器（例如 IE）不支援 SVG 頁籤圖示與部分語法。
+- 端對端測試只在 Chromium 跑（CI 也是）；效能測試不在 CI，需要時手動 `npm run perf`。
 
 ## 想法
 

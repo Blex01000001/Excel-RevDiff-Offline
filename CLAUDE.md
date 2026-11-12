@@ -20,6 +20,7 @@
 | `package.json`、`package-lock.json` | **僅開發用**（測試用的 Playwright）；成品 `index.html` 沒有任何依賴 |
 | `tests/helpers.js`、`tests/e2e.test.js` | 端對端測試（`npm test`）：當場產生測試檔、用真實瀏覽器操作頁面、讀回匯出檔 |
 | `tests/perf.js` | 效能測試（`npm run perf`，不含在 `npm test`）：3 萬列對 5 萬列 × 33 欄，量讀檔、比對時間與畫面最長停頓 |
+| `.github/workflows/test.yml` | CI：每次 push／PR 執行 `npm run check:build` 與 `npm test`（不跑效能測試） |
 | `.nojekyll` | 讓 GitHub Pages 直接提供靜態檔，不要刪 |
 
 `src/template.html` 內的區段（找函式用 `grep -n "^function"`）：多語系 `I18N`／`t()` → 狀態 `S`、`draft`、`applied`、`R` → 處理中提示 `withBusy()` → 背景執行 `runJob()`／`jobDispatch()`／`workerSource()` → 讀檔 `loadFile()`／`parseSlot()` → 欄位設定 `renderCfg()`／`applyConfig()` → 比對核心 `compare()`／`pairGroup()` → 顯示 `renderSummary()`／`renderWarnings()`／`renderTable()` → 匯出 `exportXlsx()`／`buildXlsx()` → 主題與語言切換。
