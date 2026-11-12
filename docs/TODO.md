@@ -21,6 +21,7 @@
 - 匯出檔名刻意用英文（`compare_result_日期_時間.xlsx`），因為 headless Chromium 下中文檔名會失效。
 - 舊瀏覽器（例如 IE）不支援 SVG 頁籤圖示與部分語法。
 - 端對端測試只在 Chromium 跑（CI 也是）；效能測試不在 CI，需要時手動 `npm run perf`。
+- CI 目前會出現警告（不影響結果）：`actions/checkout@v4`、`actions/setup-node@v4` 被強制改用 Node 24 執行，且 `ubuntu-latest` 即將指向 Ubuntu 26；之後把 `.github/workflows/test.yml` 的 action 升到較新的大版本，必要時把 runner 固定成 `ubuntu-24.04`。
 
 ## 想法
 
