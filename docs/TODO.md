@@ -7,7 +7,7 @@
 ## 待辦
 
 1. 【使用者】可刪除先前為了檢查 github.io 而建立的個人雲端環境 `excel-revdiff-offline`（只多允許 `blex01000001.github.io`）。
-2. 【先討論】沒有自動化測試：目前只靠臨時的 Playwright 腳本。若要放進 repo（例如 `tests/`），會引入 Node／Playwright 開發依賴。
+2. 【先討論】沒有自動化測試：已提出方案（Playwright 端對端測試放 `tests/`＋`npm test`，並以 GitHub Actions 檢查 `index.html` 是否已重新建置），等使用者決定範圍、是否接受 `package.json`／Actions、效能測試是否獨立；決定前不要動手。
 
 ## 已知問題／限制
 
