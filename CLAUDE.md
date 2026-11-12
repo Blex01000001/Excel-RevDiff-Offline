@@ -17,6 +17,8 @@
 | `README.md` | 給第一次使用者看的中英文簡介（功能、用法、格式、注意事項） |
 | `docs/TODO.md` | 目前狀態：待辦、已知問題、想法；每次 commit 時同步更新 |
 | `samples/demo_RevA.xlsx`、`demo_RevB.xlsx` | 假資料範例，用來做驗證（Key＝`SKU`） |
+| `package.json`、`package-lock.json` | **僅開發用**（測試用的 Playwright）；成品 `index.html` 沒有任何依賴 |
+| `tests/helpers.js`、`tests/e2e.test.js` | 端對端測試（`npm test`）：當場產生測試檔、用真實瀏覽器操作頁面、讀回匯出檔 |
 | `.nojekyll` | 讓 GitHub Pages 直接提供靜態檔，不要刪 |
 
 `src/template.html` 內的區段（找函式用 `grep -n "^function"`）：多語系 `I18N`／`t()` → 狀態 `S`、`draft`、`applied`、`R` → 處理中提示 `withBusy()` → 背景執行 `runJob()`／`jobDispatch()`／`workerSource()` → 讀檔 `loadFile()`／`parseSlot()` → 欄位設定 `renderCfg()`／`applyConfig()` → 比對核心 `compare()`／`pairGroup()` → 顯示 `renderSummary()`／`renderWarnings()`／`renderTable()` → 匯出 `exportXlsx()`／`buildXlsx()` → 主題與語言切換。
@@ -30,17 +32,20 @@
 - **改比對邏輯** → `compare()`、`pairGroup()`、`norm()`／`nval()` → `compare()` 在 Worker 裡執行，新用到的函式要加進 `workerSource()` 的清單（見「容易踩的雷」）；保持 `GREEDY_LIMIT` 的保護；每格正規化只算一次（快取在 `row.nc`）→ 用 3 萬 + 5 萬列的假資料量時間，並跑下面的「快速檢查」。
 - **改匯出 .xlsx** → `exportXlsx()`（內容）、`sheetXml()`／`buildXlsx()`（檔案格式與樣式 `STY`）→ 這是自己寫的 zip + OOXML，新增樣式要同步改 `styles.xml` 的 `cellXfs` 數量 → 用 openpyxl 讀回檢查值、顏色、凍結窗格。
 - **支援新的檔案格式** → `loadFile()` 前的 `<input accept>`、README 的格式清單 → 先用 SheetJS 產生該格式的測試檔實際載入驗證（含中文）。
+- **新增或修改功能** → 同時在 `tests/e2e.test.js` 補（或改）一個案例；測試用到的元素 id 與全域名稱見「容易踩的雷」 → `npm test` 要全過。
 - **升版本** → 只改 `src/VERSION`，再執行 `python3 src/build.py` → 一起 commit `src/VERSION` 與 `index.html`。依修改量判斷：只修錯誤或微調 → patch（1.1.**x**）；新增功能或明顯改善、使用方式相容 → minor（1.**x**.0）；使用方式不相容 → major。
 - **改主題顏色** → template 開頭的 `:root[data-theme="dark|light"]` 變數 → 兩個主題一起改，並看過兩種畫面。
 
-**快速檢查**（沒有單元測試／lint，用這個代替；任何改動後都要跑）：
+**快速檢查**（任何改動後都要跑）：
 
 ```bash
-python3 src/build.py
-node -e "const s=require('fs').readFileSync('index.html','utf8');const i=s.lastIndexOf('<script>');new Function(s.slice(i+8,s.indexOf('</script>',i)));console.log('SYNTAX OK')"
+npm test                # 33 個端對端測試，約 15 秒：建置是否最新、語法、核心結果、備援路徑、格式、設定操作、語言／主題、匯出…
+npm run check:build     # 只檢查 index.html 是否和 template 的建置結果一致（npm test 也會檢查）
 ```
 
-再用 Playwright（雲端環境已預裝，`require('playwright')`）打開 `index.html`（預設走 Worker 路徑；測備援路徑用 `page.addInitScript(() => { window.Worker = function(){ throw new Error('x') } })`，結果應相同）：`#fileA`／`#fileB` 載入 `samples/demo_RevA.xlsx` 與 `demo_RevB.xlsx` → 點 `#btnSuggest` → `a[data-act=all][data-k=cmp]`（比對全選）→ `#btnApply`，預期摘要為 **新增 2／刪除 1／修改 2／未變 2**，且 `pageerror` 為空。Playwright 的預設瀏覽器語言是英文，所以畫面是英文介面。
+- **雲端環境不要 `npm install`、不要 `playwright install`**：Playwright 與瀏覽器已預裝（全域），`npm test` 直接就能跑。自己的電腦第一次先 `npm ci && npx playwright install chromium`。
+- 測試預設走 Worker 路徑，並另有案例驗證 Worker 失敗時的備援路徑結果相同。
+- 測試失敗時先看錯誤訊息：比對出錯會直接帶出頁面上的錯誤文字（例如 `pairGroup is not defined`）。
 
 ## 架構決策（不要改回去）
 
@@ -54,6 +59,7 @@ node -e "const s=require('fs').readFileSync('index.html','utf8');const i=s.lastI
 - **數量差值是獨立的數字欄，儲存格只顯示 `舊 → 新`** — 方便篩選、排序、加總，匯出後 Excel 也能用 — 不要再把 `+3` 標籤塞回儲存格。
 - **預設暗色主題，不跟隨作業系統**；**語言預設跟隨瀏覽器**，兩者都用 localStorage 記住 — 使用者指定 — 不要改回 `prefers-color-scheme`。
 - **讀檔、解析工作表、比對都在 Web Worker 執行；Worker 原始碼＝內嵌 SheetJS（`<script type="text/plain" id="sheetjs-src">`）＋用 `Function.toString()` 取出的函式；Worker 失敗自動退回主執行緒** — 數萬列時主執行緒會凍結數秒，又必須維持單一 HTML — 不要拆成外部 worker 檔、不要把 SheetJS 改回主執行緒直接載入、不要移除備援。
+- **測試只供開發用，成品維持零依賴的單一 HTML** — 使用者不需要也不會碰到 Node／Playwright — 不要為了測試在 `index.html` 加任何東西（測試靠既有的全域名稱與元素 id）；測試檔當場產生，不要把二進位測試檔放進 repo。
 - **標題列固定（sticky）** — 使用者指定 — 不要移除。
 
 ## 設計規範
@@ -80,6 +86,7 @@ node -e "const s=require('fs').readFileSync('index.html','utf8');const i=s.lastI
 - `workerSource()` 的函式清單 — `compare()` 與它呼叫的函式（`cellStr`、`norm`、`pairGroup`…）是用 `toString()` 複製進 Worker 的，Worker 內看不到主執行緒的 `t()`、`$()`、`S`、DOM — 新增 `compare()` 的依賴函式時要加進清單，否則 Worker 內會 ReferenceError；備援路徑（主執行緒）卻不會發現，所以改完要用預設的 Worker 路徑跑一次。`compare()` 回傳的是精簡結果（以 `ai`／`bi` 列索引取代列物件），`runCompare()` 才還原；顯示文字（例如空 Key 的標籤）要在主執行緒用 `t()` 產生。
 - 「快速檢查」的語法檢查 — 以最後一個 `<script>` 為應用程式碼 — SheetJS 是 `type="text/plain"` 所以不會被誤判；不要在應用程式碼後面再加別的 `<script>`。
 - `showMsg()` — 要傳「產生文字的函式」（`() => t('key')`），不是字串 — 這樣切換語言時 `renderMsg()` 才能用新語言重新產生；拋出錯誤時用 `err.key` 帶 i18n key，不要把翻譯後的字串放進 `Error`。
+- 測試依賴的「介面約定」— `tests/` 用 `page.evaluate` 直接讀頂層的 `R`、`S`、`draft`、`shown`、`worker`、`workerFailed`，並用元素 id（`#fileA`、`#btnApply`、`#cfgTable`、`#stats`、`#msg`、`#dmodes`、`#langBtn`、`#themeBtn`…）操作 — 改名或移除要同步改測試，否則會一片紅。
 - `refresh()` — 載入／換檔／換工作表會清掉結果與 `applied` — 這是預期行為，使用者要重新按套用；`draft`（勾選）則保留。
 - 預設標題 `Col{n}` — 空白標題的欄名 — 刻意用不翻譯的名稱，避免切換語言後資料鍵改變。
 
@@ -98,6 +105,7 @@ node -e "const s=require('fs').readFileSync('index.html','utf8');const i=s.lastI
 - 使用者說「合併到 main」時：用可用的 GitHub 工具建立 PR 再 merge（`expectedHeadSha` 用完整 40 字元 SHA）。
 - 每完成一個獨立的修改就 commit。commit 訊息第一行簡述改了什麼，需要時空一行補充原因。
 - 改了 `src/template.html` 就要重新建置，並把 `index.html` 一起 commit。
+- `git push` 被拒絕（`fetch first`）時，代表使用者在 GitHub 上也改了東西：先 `git pull --rebase origin main`，確認沒有衝突再推；不要 `--force`。
 - 需要了解過去的修改時，用 `git log` 查詢。
 
 ## TODO 維護規則（`docs/TODO.md`）

@@ -1,0 +1,18 @@
+{
+  "name": "excel-revdiff-offline",
+  "version": "1.1.0",
+  "private": true,
+  "description": "Dev tooling only. The product is the single file index.html and has no dependencies.",
+  "scripts": {
+    "build": "python3 src/build.py",
+    "check:build": "python3 src/build.py --check",
+    "test": "node --test --test-timeout=120000 tests/e2e.test.js",
+    "perf": "node tests/perf.js"
+  },
+  "devDependencies": {
+    "playwright": "^1.63.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
