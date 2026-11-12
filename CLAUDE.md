@@ -19,6 +19,7 @@
 | `samples/demo_RevA.xlsx`、`demo_RevB.xlsx` | 假資料範例，用來做驗證（Key＝`SKU`） |
 | `package.json`、`package-lock.json` | **僅開發用**（測試用的 Playwright）；成品 `index.html` 沒有任何依賴 |
 | `tests/helpers.js`、`tests/e2e.test.js` | 端對端測試（`npm test`）：當場產生測試檔、用真實瀏覽器操作頁面、讀回匯出檔 |
+| `tests/perf.js` | 效能測試（`npm run perf`，不含在 `npm test`）：3 萬列對 5 萬列 × 33 欄，量讀檔、比對時間與畫面最長停頓 |
 | `.nojekyll` | 讓 GitHub Pages 直接提供靜態檔，不要刪 |
 
 `src/template.html` 內的區段（找函式用 `grep -n "^function"`）：多語系 `I18N`／`t()` → 狀態 `S`、`draft`、`applied`、`R` → 處理中提示 `withBusy()` → 背景執行 `runJob()`／`jobDispatch()`／`workerSource()` → 讀檔 `loadFile()`／`parseSlot()` → 欄位設定 `renderCfg()`／`applyConfig()` → 比對核心 `compare()`／`pairGroup()` → 顯示 `renderSummary()`／`renderWarnings()`／`renderTable()` → 匯出 `exportXlsx()`／`buildXlsx()` → 主題與語言切換。
@@ -29,6 +30,7 @@
 
 - **改或新增介面文字** → `src/template.html` 的 `I18N.zh` 與 `I18N.en`（兩邊都要有同一個 key）；靜態 HTML 用 `data-i18n`／`data-i18n-ph`／`data-i18n-title`，動態文字用 `t('key', ...)` → 欄名是資料鍵，不翻譯 → 切換語言後畫面（含結果、匯出標題）都正確。
 - **新增 UI 元件** → template 的 HTML 與 CSS → 顏色用 CSS 變數（暗／亮兩組都要有值）；文字走 i18n；耗時動作包 `withBusy()` → 暗色與亮色、中文與英文各看一次。
+- **改讀檔／比對的效能相關程式** → 改完另外跑 `npm run perf`（約 30 秒），對照輸出的毫秒數與「畫面最長停頓」，Worker 路徑的停頓應維持在約 0.1–0.4 秒 → 門檻放寬（單步 60 秒、停頓 2 秒），只抓明顯退步。
 - **改比對邏輯** → `compare()`、`pairGroup()`、`norm()`／`nval()` → `compare()` 在 Worker 裡執行，新用到的函式要加進 `workerSource()` 的清單（見「容易踩的雷」）；保持 `GREEDY_LIMIT` 的保護；每格正規化只算一次（快取在 `row.nc`）→ 用 3 萬 + 5 萬列的假資料量時間，並跑下面的「快速檢查」。
 - **改匯出 .xlsx** → `exportXlsx()`（內容）、`sheetXml()`／`buildXlsx()`（檔案格式與樣式 `STY`）→ 這是自己寫的 zip + OOXML，新增樣式要同步改 `styles.xml` 的 `cellXfs` 數量 → 用 openpyxl 讀回檢查值、顏色、凍結窗格。
 - **支援新的檔案格式** → `loadFile()` 前的 `<input accept>`、README 的格式清單 → 先用 SheetJS 產生該格式的測試檔實際載入驗證（含中文）。
@@ -40,6 +42,7 @@
 
 ```bash
 npm test                # 33 個端對端測試，約 15 秒：建置是否最新、語法、核心結果、備援路徑、格式、設定操作、語言／主題、匯出…
+npm run perf            # 效能測試（較慢、與機器有關，所以不放在 npm test，改讀檔／比對時才跑）
 npm run check:build     # 只檢查 index.html 是否和 template 的建置結果一致（npm test 也會檢查）
 ```
 
