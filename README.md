@@ -6,7 +6,41 @@
 
 ---
 
-## 中文
+## English
+
+**Excel RevDiff Offline** compares two Excel files that share the same layout: pick the old and the new revision and instantly see which rows were added, deleted or modified.
+
+The whole tool is a **single HTML file** — nothing to install, no internet needed. Your data is processed inside your browser and **never uploaded anywhere**, so it works even on locked-down company PCs.
+
+### What it does
+
+- **Finds the differences**: every row is classified as Added, Deleted, Modified or Unchanged, color-coded (green = added, red = deleted, yellow = modified).
+- **Shows what changed**: modified cells display "old → new", and the changed columns are listed per row.
+- **Your own Key**: tick which columns together identify the same row (for example ID + size), or press "Suggest Key" to get a starting point.
+- **Quantity delta**: tick a quantity column to get an extra column with the difference (`+3`, `-2`). Filter by increase / decrease, sort it, and see the total delta.
+- **Automatic normalization**: ignores leading/trailing spaces, full-width vs half-width characters and letter case, and treats `10` and `10.0` as equal — fewer false alarms.
+- **Duplicate Key warnings**: duplicate Keys inside one file are never silently skipped; you get a warning explaining how they were paired.
+- **Filter, search, export**: filter by category, search across all columns, and export a color-coded .xlsx (with a summary sheet).
+- **Handles large files**: tens of thousands of rows are fine.
+- **Interface**: English / 繁體中文 and dark / light themes, switchable with the buttons at the top right.
+
+### How to use it in 3 steps
+
+1. **Select files**: choose the old (Rev A) and new (Rev B) file. If a file has several sheets, pick one; if the header is not on row 1, set the header row.
+2. **Compare settings**: tick the Key columns, the columns to compare and any quantity columns, then press "Apply & compare".
+3. **Review**: read the summary and the table, and export to .xlsx if needed.
+
+### Supported file formats
+
+`.xlsx`, `.xlsm`, `.xlsb`, `.xls`, `.ods`, `.csv`
+
+### Notes
+
+- Password-protected files cannot be read.
+- Very old Excel 5.0/95 `.xls` files may show garbled non-Latin text, and so may Big5-encoded CSV files — save them as `.xlsx` first.
+
+
+## 繁體中文
 
 **Excel RevDiff Offline** 是一個比對「兩份格式相同的 Excel」的小工具：選好舊版與新版，馬上看出哪些列被新增、刪除或修改。
 
@@ -41,35 +75,4 @@
 
 ---
 
-## English
 
-**Excel RevDiff Offline** compares two Excel files that share the same layout: pick the old and the new revision and instantly see which rows were added, deleted or modified.
-
-The whole tool is a **single HTML file** — nothing to install, no internet needed. Your data is processed inside your browser and **never uploaded anywhere**, so it works even on locked-down company PCs.
-
-### What it does
-
-- **Finds the differences**: every row is classified as Added, Deleted, Modified or Unchanged, color-coded (green = added, red = deleted, yellow = modified).
-- **Shows what changed**: modified cells display "old → new", and the changed columns are listed per row.
-- **Your own Key**: tick which columns together identify the same row (for example ID + size), or press "Suggest Key" to get a starting point.
-- **Quantity delta**: tick a quantity column to get an extra column with the difference (`+3`, `-2`). Filter by increase / decrease, sort it, and see the total delta.
-- **Automatic normalization**: ignores leading/trailing spaces, full-width vs half-width characters and letter case, and treats `10` and `10.0` as equal — fewer false alarms.
-- **Duplicate Key warnings**: duplicate Keys inside one file are never silently skipped; you get a warning explaining how they were paired.
-- **Filter, search, export**: filter by category, search across all columns, and export a color-coded .xlsx (with a summary sheet).
-- **Handles large files**: tens of thousands of rows are fine.
-- **Interface**: English / 繁體中文 and dark / light themes, switchable with the buttons at the top right.
-
-### How to use it in 3 steps
-
-1. **Select files**: choose the old (Rev A) and new (Rev B) file. If a file has several sheets, pick one; if the header is not on row 1, set the header row.
-2. **Compare settings**: tick the Key columns, the columns to compare and any quantity columns, then press "Apply & compare".
-3. **Review**: read the summary and the table, and export to .xlsx if needed.
-
-### Supported file formats
-
-`.xlsx`, `.xlsm`, `.xlsb`, `.xls`, `.ods`, `.csv`
-
-### Notes
-
-- Password-protected files cannot be read.
-- Very old Excel 5.0/95 `.xls` files may show garbled non-Latin text, and so may Big5-encoded CSV files — save them as `.xlsx` first.
