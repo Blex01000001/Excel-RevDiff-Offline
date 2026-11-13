@@ -7,6 +7,11 @@
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232457c5'/%3E%3Crect x='6' y='7' width='20' height='4.5' rx='2' fill='%234ade80'/%3E%3Crect x='6' y='13.75' width='20' height='4.5' rx='2' fill='%23facc15'/%3E%3Crect x='6' y='20.5' width='20' height='4.5' rx='2' fill='%23f87171'/%3E%3C/svg%3E">
 <script>(function(){var th='dark';try{var v=localStorage.getItem('revdiff-theme');if(v==='light'||v==='dark')th=v;}catch(e){}document.documentElement.setAttribute('data-theme',th);})();</script>
 <style>
+/* 【樣式規則】
+   - 顏色只用 CSS 變數；新增變數時暗色（預設）與亮色兩組 :root[data-theme] 都要給值。
+   - [hidden]{display:none!important} 不可刪：.finfo 等 display:flex 的元素會蓋掉 hidden 屬性。
+   - .card 的 scroll-margin-top 與固定標題列（header，sticky）的高度綁在一起，改其一要一起調。
+   - 不可引用外部資源（字型、圖片、CDN）。 */
 :root,:root[data-theme="dark"]{
   color-scheme:dark;
   --bg:#12161d;--panel:#1b212b;--text:#e6e9ef;--muted:#98a2b3;--line:#323b4a;--accent:#7aa2f7;--accent-soft:#25324d;
@@ -232,6 +237,11 @@ if(xr(e,"index.xml"))throw new Error("Unsupported NUMBERS 09 file");throw new Er
 </script>
 <script>
 'use strict';
+/* 【本檔】$() / esc() 小工具、I18N 字典（zh、en）、t()、STATUS()
+   - 新增文字：zh 與 en 都要加同一個 key；值可為字串（{0} 佔位）或函式。英文用工程師常用說法。
+   - 靜態 HTML（template.html）用 data-i18n / data-i18n-ph / data-i18n-title；動態文字用 t('key', ...)。
+   - 資料欄名同時是資料鍵：不翻譯、不改大小寫。
+   - 其他檔案不要把區域變數取名為 t（會蓋掉 t()）。插入 HTML 的資料一律 esc()。 */
 /* ================= 工具函式 ================= */
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -359,6 +369,9 @@ function t(k, ...a){
 }
 const STATUS = () => ({add:t('stAdd'), del:t('stDel'), mod:t('stMod'), same:t('stSame')});
 
+/* 【本檔】儲存格轉字串與正規化：cellStr、normText、numOf、norm、parseNum、fmtDelta
+   - 這些函式會以 toString() 複製進 Worker（見 worker.js 的 workerSource()）：不可使用 t()、$()、DOM、S。
+   - 有前置 0 的代碼（例如 007）刻意不當成數字；10 與 10.0 視為相同。 */
 const NUM_RE = /^[+-]?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?$/;
 
 function cellStr(v){
@@ -401,6 +414,9 @@ function fmtDelta(d){
 }
 
 /* ================= 狀態 ================= */
+/* 【本檔】全域狀態（S、draft、applied、R、shown…）與「處理中」遮罩（showBusy / withBusy）
+   - tests/ 會用 page.evaluate 直接讀 R、S、draft、shown、worker、workerFailed：改名要同步改測試。
+   - 新的耗時動作一律包 withBusy(訊息, fn)，fn 可以是 async。 */
 const S = {
   A:{id:'A', get label(){ return t('revA'); }, wb:null, name:'', sheet:'', hr:1, aoa:null, off:0, headers:[], rows:null},
   B:{id:'B', get label(){ return t('revB'); }, wb:null, name:'', sheet:'', hr:1, aoa:null, off:0, headers:[], rows:null},
@@ -435,6 +451,12 @@ async function withBusy(msg, fn){
 }
 
 /* ================= 讀檔 ================= */
+/* 【本檔】檔案選擇區、訊息列（showMsg）、讀檔（loadFile）、把工作表解析成列（parseSlot）
+   - showMsg() 要傳「產生文字的函式」（() => t('key')），切換語言時才會用新語言重新產生；
+     拋錯時用 err.key 帶 i18n key，不要把翻譯後的字串放進 Error。
+   - 讀檔與取工作表都走 runJob()（Worker），這裡不直接呼叫 XLSX。
+   - 支援新格式：改 buildSlotUI() 的 <input accept> 與 looksLikeExcel()，並更新 README 與 tests/ 的格式案例。
+   - 空白標題的欄名固定為 Col{n}（不翻譯，避免切換語言後資料鍵改變）。 */
 function renderSlotStatic(slot){
   $('#dropTxt'+slot.id).innerHTML = `<b>${esc(slot.label)}</b><br>${t('dropHint')}<br><small>${t('dropFmt')}</small>`;
   $('#shLbl'+slot.id).textContent = t('sheetLbl');
@@ -556,6 +578,12 @@ function parseSlot(slot, autoHeader){
 }
 
 /* ================= 欄位設定 ================= */
+/* 【本檔】比對設定表（Key／比對／數量）、建議 Key、套用
+   - 勾選只改 draft；按「套用並開始比對」才寫入 applied 並比對。載入後什麼都不預選、不自動比對（使用者指定）。
+   - 勾「數量」必定鎖定並勾選「比對」（isCmp / syncCmpBox），批次清除不可繞過。
+   - #cfgTable 的 change 處理函式裡有區域變數 t（= e.target），該區塊內不要呼叫 t()。
+   - refresh() 會清掉結果與 applied（換檔、換工作表後要重新套用），draft 保留。
+   - 預設 Key 不可設成第一欄（低區分度會讓比對爆量）。 */
 function syncColumns(){
   const a = S.A.headers || [], b = S.B.headers || [];
   COLS = [...a, ...b.filter(x => !a.includes(x))];
@@ -698,6 +726,15 @@ function applyConfig(){
 }
 
 /* ================= 比對核心 ================= */
+/* 【本檔】比對核心（在 Worker 內執行）：compare()、pairGroup()、groupBy()…
+   - 這些函式會以 toString() 複製進 Worker：不可使用 t()、$()、DOM、S。
+     新增「被 compare() 用到」的函式，要加進 worker.js 的 workerSource() 清單，否則 Worker 內 ReferenceError
+     （主執行緒的備援路徑不會發現；npm test 預設走 Worker 路徑，會抓到）。
+   - 保留 GREEDY_LIMIT：同 Key 的列先用雜湊配對完全相同者，剩下的在上限內才做「差異最少」配對，
+     超過就依順序配對並警告。拿掉上限會讓低區分度的 Key 卡死頁面。
+   - 重複 Key 不可略過。每格正規化只算一次（nval 快取在 row.nc）。
+   - e.hay 的狀態文字刻意同時放中英文，切換語言後搜尋才仍然有效。
+   - 動到這裡：npm test；會影響速度的再跑 npm run perf。 */
 /* 每個儲存格只正規化一次（NFKC 很耗時），之後都用快取 */
 function nval(r, c){ const m = r.nc || (r.nc = {}); return c in m ? m[c] : (m[c] = norm(r.v[c])); }
 function rowKey(row, keyCols){ return keyCols.map(c => nval(row, c)).join('\u0001'); }
@@ -821,7 +858,10 @@ function compare(A, B, keyCols, cmpCols, qtyCols){
    讀檔、解析工作表、比對都在 Worker 裡跑，頁面不會凍結。Worker 的程式碼由下列函式的原始碼
    （Function.prototype.toString）加上內嵌的 SheetJS 組成，所以整個工具仍是單一 HTML 檔。
    若 Worker 無法建立或啟動失敗，會自動退回在主執行緒執行（同一組函式，只是會卡住畫面）。
-   ！compare() 會用到的函式必須都列在 workerSource() 的清單裡，且不可使用 t()、$()、S 等主執行緒才有的東西。 */
+   ！compare() 會用到的函式必須都列在 workerSource() 的清單裡，且不可使用 t()、$()、S 等主執行緒才有的東西。
+   - compare() 回傳精簡結果（以 ai / bi 列索引取代列物件），runCompare() 才還原；顯示用的文字在主執行緒以 t() 產生。
+   - 不要拆成外部 worker 檔、不要把 SheetJS 改回主執行緒直接載入、不要移除備援（runJobLocal）。
+   - SheetJS 放在 template.html 裡 id="sheetjs-src" 的純文字 script 區塊（type="text/plain"），由 build.py 填入。 */
 function jobDispatch(books, type, payload){
   if (type === 'read'){
     const wb = XLSX.read(new Uint8Array(payload.buf), {type:'array', cellDates:true});
@@ -922,6 +962,11 @@ async function runCompare(){
 }
 
 /* ================= 顯示 ================= */
+/* 【本檔】結果顯示：摘要卡片、警告、類別篩選、數量差值工具列、結果表格
+   - 插入 HTML 的資料一律 esc()。
+   - 重複 Key／欄位不一致的警告用 <details>，預設收折；不要移除，也不要預設展開。
+   - 數量差值是獨立的數字欄（deltaCell），數量儲存格只顯示「舊 → 新」，不要再加 +N 標籤。
+   - 表格一次只畫 pageSize 列（再載入 500 列），避免大量資料卡住。 */
 function renderSummary(){
   const c = R.counts;
   $('#stats').innerHTML = `
@@ -1070,6 +1115,12 @@ function renderTable(){
 }
 
 /* ================= 匯出 .xlsx（自製寫檔，可帶顏色） ================= */
+/* 【本檔】匯出 .xlsx：自己寫的 zip（不壓縮）＋ OOXML。SheetJS 免費版寫檔沒有儲存格顏色，不要換回 XLSX.writeFile。
+   - 新增樣式：同步改 buildXlsx() 裡 styles.xml 的 cellXfs（含 count）與 STY。
+   - sheetXml() 會略過 '' 與 null；數字才寫成 <v>。要輸出空白請用 ''，不要用 0。
+   - 差值欄輸出成數字（Excel 內可篩選、加總）；修改的儲存格輸出文字「舊 → 新」。
+   - 檔名刻意用英文（headless Chromium 的中文下載檔名會失效）。
+   - 驗證：tests/e2e.test.js 的「匯出 .xlsx」會讀回內容、樣式、凍結窗格與篩選。 */
 const CRC_T = (() => { const t = new Uint32Array(256); for (let n=0;n<256;n++){ let c=n; for (let k=0;k<8;k++) c = c&1 ? 0xEDB88320^(c>>>1) : c>>>1; t[n]=c>>>0; } return t; })();
 function crc32(u8){ let c = 0xFFFFFFFF; for (let i=0;i<u8.length;i++) c = CRC_T[(c^u8[i])&255]^(c>>>8); return (c^0xFFFFFFFF)>>>0; }
 function zipStore(files){
@@ -1209,6 +1260,10 @@ function exportXlsx(){
 $('#btnExport').addEventListener('click', exportXlsx);
 
 /* ================= 主題切換（預設暗色） ================= */
+/* 【本檔】主題與語言切換、啟動
+   - 預設暗色主題、不跟隨作業系統；語言預設跟隨瀏覽器；兩者都用 localStorage 記住（讀寫一律 try/catch）。
+   - 這必須是頁面最後一段程式：測試以「最後一個 script 標籤」做語法檢查，template.html 在它後面不要再加別的 script 標籤。
+   - js/ 與 styles.css 的內容（含註解）不可出現字面上的 script 開始或結束標籤，會干擾 HTML 解析與上述檢查。 */
 function curTheme(){ return document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark'; }
 function updateThemeBtn(){
   const tip = t(curTheme() === 'dark' ? 'themeToLight' : 'themeToDark');

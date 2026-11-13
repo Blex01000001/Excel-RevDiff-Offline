@@ -1,0 +1,4 @@
+# 產物與大型單行檔：git diff / git show 不要把內容倒出來（只顯示「有變更」），GitHub 也會摺疊
+index.html             -diff linguist-generated=true
+src/xlsx.core.min.js   -diff linguist-vendored=true
+package-lock.json      -diff linguist-generated=true

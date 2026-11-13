@@ -1,4 +1,7 @@
 /* ================= 狀態 ================= */
+/* 【本檔】全域狀態（S、draft、applied、R、shown…）與「處理中」遮罩（showBusy / withBusy）
+   - tests/ 會用 page.evaluate 直接讀 R、S、draft、shown、worker、workerFailed：改名要同步改測試。
+   - 新的耗時動作一律包 withBusy(訊息, fn)，fn 可以是 async。 */
 const S = {
   A:{id:'A', get label(){ return t('revA'); }, wb:null, name:'', sheet:'', hr:1, aoa:null, off:0, headers:[], rows:null},
   B:{id:'B', get label(){ return t('revB'); }, wb:null, name:'', sheet:'', hr:1, aoa:null, off:0, headers:[], rows:null},

@@ -1,3 +1,8 @@
+/* 【樣式規則】
+   - 顏色只用 CSS 變數；新增變數時暗色（預設）與亮色兩組 :root[data-theme] 都要給值。
+   - [hidden]{display:none!important} 不可刪：.finfo 等 display:flex 的元素會蓋掉 hidden 屬性。
+   - .card 的 scroll-margin-top 與固定標題列（header，sticky）的高度綁在一起，改其一要一起調。
+   - 不可引用外部資源（字型、圖片、CDN）。 */
 :root,:root[data-theme="dark"]{
   color-scheme:dark;
   --bg:#12161d;--panel:#1b212b;--text:#e6e9ef;--muted:#98a2b3;--line:#323b4a;--accent:#7aa2f7;--accent-soft:#25324d;

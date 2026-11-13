@@ -1,4 +1,10 @@
 /* ================= 匯出 .xlsx（自製寫檔，可帶顏色） ================= */
+/* 【本檔】匯出 .xlsx：自己寫的 zip（不壓縮）＋ OOXML。SheetJS 免費版寫檔沒有儲存格顏色，不要換回 XLSX.writeFile。
+   - 新增樣式：同步改 buildXlsx() 裡 styles.xml 的 cellXfs（含 count）與 STY。
+   - sheetXml() 會略過 '' 與 null；數字才寫成 <v>。要輸出空白請用 ''，不要用 0。
+   - 差值欄輸出成數字（Excel 內可篩選、加總）；修改的儲存格輸出文字「舊 → 新」。
+   - 檔名刻意用英文（headless Chromium 的中文下載檔名會失效）。
+   - 驗證：tests/e2e.test.js 的「匯出 .xlsx」會讀回內容、樣式、凍結窗格與篩選。 */
 const CRC_T = (() => { const t = new Uint32Array(256); for (let n=0;n<256;n++){ let c=n; for (let k=0;k<8;k++) c = c&1 ? 0xEDB88320^(c>>>1) : c>>>1; t[n]=c>>>0; } return t; })();
 function crc32(u8){ let c = 0xFFFFFFFF; for (let i=0;i<u8.length;i++) c = CRC_T[(c^u8[i])&255]^(c>>>8); return (c^0xFFFFFFFF)>>>0; }
 function zipStore(files){

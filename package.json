@@ -6,8 +6,9 @@
   "scripts": {
     "build": "python3 src/build.py",
     "check:build": "python3 src/build.py --check",
-    "test": "node --test --test-timeout=120000 tests/e2e.test.js",
-    "perf": "node tests/perf.js"
+    "test": "node --test --test-timeout=120000 --test-reporter=dot tests/e2e.test.js",
+    "perf": "node tests/perf.js",
+    "test:verbose": "node --test --test-timeout=120000 --test-reporter=spec tests/e2e.test.js"
   },
   "devDependencies": {
     "playwright": "^1.63.0"

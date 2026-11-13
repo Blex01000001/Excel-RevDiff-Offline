@@ -1,4 +1,10 @@
 /* ================= 讀檔 ================= */
+/* 【本檔】檔案選擇區、訊息列（showMsg）、讀檔（loadFile）、把工作表解析成列（parseSlot）
+   - showMsg() 要傳「產生文字的函式」（() => t('key')），切換語言時才會用新語言重新產生；
+     拋錯時用 err.key 帶 i18n key，不要把翻譯後的字串放進 Error。
+   - 讀檔與取工作表都走 runJob()（Worker），這裡不直接呼叫 XLSX。
+   - 支援新格式：改 buildSlotUI() 的 <input accept> 與 looksLikeExcel()，並更新 README 與 tests/ 的格式案例。
+   - 空白標題的欄名固定為 Col{n}（不翻譯，避免切換語言後資料鍵改變）。 */
 function renderSlotStatic(slot){
   $('#dropTxt'+slot.id).innerHTML = `<b>${esc(slot.label)}</b><br>${t('dropHint')}<br><small>${t('dropFmt')}</small>`;
   $('#shLbl'+slot.id).textContent = t('sheetLbl');

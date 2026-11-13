@@ -1,3 +1,6 @@
+/* 【本檔】儲存格轉字串與正規化：cellStr、normText、numOf、norm、parseNum、fmtDelta
+   - 這些函式會以 toString() 複製進 Worker（見 worker.js 的 workerSource()）：不可使用 t()、$()、DOM、S。
+   - 有前置 0 的代碼（例如 007）刻意不當成數字；10 與 10.0 視為相同。 */
 const NUM_RE = /^[+-]?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?$/;
 
 function cellStr(v){

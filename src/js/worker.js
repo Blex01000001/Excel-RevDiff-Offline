@@ -2,7 +2,10 @@
    讀檔、解析工作表、比對都在 Worker 裡跑，頁面不會凍結。Worker 的程式碼由下列函式的原始碼
    （Function.prototype.toString）加上內嵌的 SheetJS 組成，所以整個工具仍是單一 HTML 檔。
    若 Worker 無法建立或啟動失敗，會自動退回在主執行緒執行（同一組函式，只是會卡住畫面）。
-   ！compare() 會用到的函式必須都列在 workerSource() 的清單裡，且不可使用 t()、$()、S 等主執行緒才有的東西。 */
+   ！compare() 會用到的函式必須都列在 workerSource() 的清單裡，且不可使用 t()、$()、S 等主執行緒才有的東西。
+   - compare() 回傳精簡結果（以 ai / bi 列索引取代列物件），runCompare() 才還原；顯示用的文字在主執行緒以 t() 產生。
+   - 不要拆成外部 worker 檔、不要把 SheetJS 改回主執行緒直接載入、不要移除備援（runJobLocal）。
+   - SheetJS 放在 template.html 裡 id="sheetjs-src" 的純文字 script 區塊（type="text/plain"），由 build.py 填入。 */
 function jobDispatch(books, type, payload){
   if (type === 'read'){
     const wb = XLSX.read(new Uint8Array(payload.buf), {type:'array', cellDates:true});

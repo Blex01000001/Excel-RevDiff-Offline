@@ -1,4 +1,9 @@
 'use strict';
+/* 【本檔】$() / esc() 小工具、I18N 字典（zh、en）、t()、STATUS()
+   - 新增文字：zh 與 en 都要加同一個 key；值可為字串（{0} 佔位）或函式。英文用工程師常用說法。
+   - 靜態 HTML（template.html）用 data-i18n / data-i18n-ph / data-i18n-title；動態文字用 t('key', ...)。
+   - 資料欄名同時是資料鍵：不翻譯、不改大小寫。
+   - 其他檔案不要把區域變數取名為 t（會蓋掉 t()）。插入 HTML 的資料一律 esc()。 */
 /* ================= 工具函式 ================= */
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));

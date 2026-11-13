@@ -18,4 +18,4 @@ jobs:
       - run: npx playwright install --with-deps chromium
       # index.html 必須是 template／VERSION／SheetJS 建置出來的最新結果
       - run: npm run check:build
-      - run: npm test
+      - run: npm run test:verbose

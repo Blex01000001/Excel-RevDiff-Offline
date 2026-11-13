@@ -1,4 +1,10 @@
 /* ================= 欄位設定 ================= */
+/* 【本檔】比對設定表（Key／比對／數量）、建議 Key、套用
+   - 勾選只改 draft；按「套用並開始比對」才寫入 applied 並比對。載入後什麼都不預選、不自動比對（使用者指定）。
+   - 勾「數量」必定鎖定並勾選「比對」（isCmp / syncCmpBox），批次清除不可繞過。
+   - #cfgTable 的 change 處理函式裡有區域變數 t（= e.target），該區塊內不要呼叫 t()。
+   - refresh() 會清掉結果與 applied（換檔、換工作表後要重新套用），draft 保留。
+   - 預設 Key 不可設成第一欄（低區分度會讓比對爆量）。 */
 function syncColumns(){
   const a = S.A.headers || [], b = S.B.headers || [];
   COLS = [...a, ...b.filter(x => !a.includes(x))];

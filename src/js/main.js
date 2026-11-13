@@ -1,4 +1,8 @@
 /* ================= 主題切換（預設暗色） ================= */
+/* 【本檔】主題與語言切換、啟動
+   - 預設暗色主題、不跟隨作業系統；語言預設跟隨瀏覽器；兩者都用 localStorage 記住（讀寫一律 try/catch）。
+   - 這必須是頁面最後一段程式：測試以「最後一個 script 標籤」做語法檢查，template.html 在它後面不要再加別的 script 標籤。
+   - js/ 與 styles.css 的內容（含註解）不可出現字面上的 script 開始或結束標籤，會干擾 HTML 解析與上述檢查。 */
 function curTheme(){ return document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark'; }
 function updateThemeBtn(){
   const tip = t(curTheme() === 'dark' ? 'themeToLight' : 'themeToDark');

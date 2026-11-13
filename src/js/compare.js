@@ -1,4 +1,13 @@
 /* ================= 比對核心 ================= */
+/* 【本檔】比對核心（在 Worker 內執行）：compare()、pairGroup()、groupBy()…
+   - 這些函式會以 toString() 複製進 Worker：不可使用 t()、$()、DOM、S。
+     新增「被 compare() 用到」的函式，要加進 worker.js 的 workerSource() 清單，否則 Worker 內 ReferenceError
+     （主執行緒的備援路徑不會發現；npm test 預設走 Worker 路徑，會抓到）。
+   - 保留 GREEDY_LIMIT：同 Key 的列先用雜湊配對完全相同者，剩下的在上限內才做「差異最少」配對，
+     超過就依順序配對並警告。拿掉上限會讓低區分度的 Key 卡死頁面。
+   - 重複 Key 不可略過。每格正規化只算一次（nval 快取在 row.nc）。
+   - e.hay 的狀態文字刻意同時放中英文，切換語言後搜尋才仍然有效。
+   - 動到這裡：npm test；會影響速度的再跑 npm run perf。 */
 /* 每個儲存格只正規化一次（NFKC 很耗時），之後都用快取 */
 function nval(r, c){ const m = r.nc || (r.nc = {}); return c in m ? m[c] : (m[c] = norm(r.v[c])); }
 function rowKey(row, keyCols){ return keyCols.map(c => nval(row, c)).join('\u0001'); }
