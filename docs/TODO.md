@@ -20,6 +20,7 @@
 - 標題列自動偵測只看前 30 列；日期以 `yyyy-mm-dd` 字串比對。
 - 匯出檔名刻意用英文（`compare_result_日期_時間.xlsx`），因為 headless Chromium 下中文檔名會失效。
 - 舊瀏覽器（例如 IE）不支援 SVG 頁籤圖示與部分語法。
+- 各原始檔開頭的規則註解會一起進入 `index.html`（約 3 KB），刻意接受，換取建置流程簡單。
 - 端對端測試只在 Chromium 跑（CI 也是）；效能測試不在 CI，需要時手動 `npm run perf`。
 
 ## 想法
