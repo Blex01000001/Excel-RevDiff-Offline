@@ -31,7 +31,7 @@
 | 建置、版本號 | `src/build.py`、`src/VERSION` |
 | 測試 | `tests/e2e.test.js`（案例）、`tests/helpers.js`（產生測試檔、操作頁面、讀回匯出檔）、`tests/perf.js` |
 | 文件 | `README.md`（給使用者的中英文簡介）、`docs/TODO.md`（目前狀態，每次 commit 同步更新）、`docs/DECISIONS.md`（架構決策的理由） |
-| 其他 | `LICENSE`（MIT）、`samples/`（假資料範例，Key＝`SKU`）、`.github/workflows/test.yml`（CI）、`.gitattributes`、`.nojekyll`（不要刪）、`package.json`（僅開發用） |
+| 其他 | `LICENSE`（MIT）、`samples/`（假資料範例，Key＝`SKU`）、`.github/workflows/test.yml`（CI；會快取 Playwright 瀏覽器，鍵是 `package-lock.json` 的雜湊，升級 Playwright 會自動換新快取）、`.gitattributes`、`.nojekyll`（不要刪）、`package.json`（僅開發用） |
 
 `index.html` 是 `src/build.py` 把 `template.html`、`styles.css`、`js/*.js`、SheetJS、版本號組起來的**產物**（GitHub Pages 與使用者直接用它）。
 

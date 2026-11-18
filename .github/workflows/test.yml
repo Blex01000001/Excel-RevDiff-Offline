@@ -15,7 +15,20 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps chromium
+      # Playwright 的瀏覽器約 150 MB，下載很慢；以 package-lock.json 的雜湊當快取鍵（升級 Playwright 就會自動換新）。
+      # 瀏覽器可以快取，系統套件（apt）不行，所以命中快取時只補裝系統套件。
+      - name: Cache Playwright browsers
+        id: pw-cache
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+      - name: Install Playwright browser and system packages
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+      - name: Install Playwright system packages only (browser restored from cache)
+        if: steps.pw-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
       # index.html 必須是 template／VERSION／SheetJS 建置出來的最新結果
       - run: npm run check:build
       - run: npm run test:verbose
