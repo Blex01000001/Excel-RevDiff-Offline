@@ -1,6 +1,6 @@
 {
   "name": "excel-revdiff-offline",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "private": true,
   "description": "Dev tooling only. The product is the single file index.html and has no dependencies.",
   "scripts": {
