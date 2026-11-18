@@ -7,7 +7,7 @@
 ## 待辦
 
 1. 【使用者】可刪除先前為了檢查 github.io 而建立的個人雲端環境 `excel-revdiff-offline`（只多允許 `blex01000001.github.io`）。
-2. 【使用者】（可選）到 GitHub Settings → General 打開 "Automatically delete head branches"；若要擋下 CI 失敗的合併，再到 Branch protection 設 `main` 必須通過 `test` 檢查。目前 Claude 合併後會自己刪分支，也只在 CI 成功後才合併。
+2. 【使用者】到 GitHub Settings → General 打開 "Automatically delete head branches"（必要：這個環境刪不了遠端分支）；並手動刪掉殘留的 `docs/pr-workflow`（PR #1 頁面的 Delete branch）。可選：Branch protection 設 `main` 必須通過 `test` 檢查，擋下 CI 失敗的合併。
 
 ## 已知問題／限制
 
