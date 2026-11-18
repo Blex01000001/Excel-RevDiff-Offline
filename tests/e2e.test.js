@@ -497,6 +497,51 @@ describe('語言與主題', () => {
     assert.equal(off.anim, 'none');
     assert.equal(off.full, true);
   });
+  test('股市色系：淺色＝漲停（紅、上升）、深色＝跌停（綠、下降）；紅漲綠跌，新增紅、刪除綠；鎖死標籤與遮罩', async () => {
+    const look = async opts => {
+      const { page } = await app(opts);
+      return page.evaluate(() => {
+        const r = document.documentElement; r.dataset.palette = 'stock';
+        const rgb = s => { s = s.trim(); if (s.length === 4) s = '#' + [...s.slice(1)].map(x => x + x).join(''); return [1, 3, 5].map(i => parseInt(s.slice(i, i + 2), 16)); };
+        const out = {};
+        for (const mode of ['light', 'dark']) {
+          r.dataset.theme = mode; r.lang = 'zh-Hant';
+          const g = n => getComputedStyle(r).getPropertyValue(n);
+          const pill = () => getComputedStyle(document.querySelector('header h1'), '::after');
+          out[mode] = { accent: rgb(g('--accent')), add: rgb(g('--add-t')), del: rgb(g('--del-t')), pill: pill().content,
+                        icon: getComputedStyle(document.querySelector('header h1'), '::before').content, bars: getComputedStyle(document.querySelector('.card h2'), '::after').content,
+                        blink: pill().animationName };
+          r.lang = 'en'; out[mode].pillEn = pill().content; r.lang = 'zh-Hant';
+        }
+        r.dataset.theme = 'dark'; showBusy('x');
+        const q = (s, ps) => getComputedStyle(document.querySelector(s), ps);
+        out.busyIcon = q('#busy .t', '::before').content; out.bar = q('#busy .bar i').backgroundImage.includes('repeating-linear-gradient'); out.anim = q('#busy .bar i').animationName;
+        const bar = document.querySelector('#busy .bar'), thumb = document.querySelector('#busy .bar i');
+        out.full = thumb.getBoundingClientRect().width >= bar.getBoundingClientRect().width - 3;
+        hideBusy(); return out;
+      });
+    };
+    const on = await look();
+    const [lr, lg] = [on.light.accent[0], on.light.accent[1]], [dr, dg] = [on.dark.accent[0], on.dark.accent[1]];
+    assert.ok(lr > lg * 2, '淺色（漲停）的主色是紅色：' + on.light.accent);
+    assert.ok(dg > dr * 2, '深色（跌停）的主色是綠色：' + on.dark.accent);
+    for (const m of ['light', 'dark']) {
+      assert.ok(on[m].add[0] > on[m].add[1], `${m}：新增（漲）是紅色系`);
+      assert.ok(on[m].del[1] > on[m].del[0], `${m}：刪除（跌）是綠色系`);
+    }
+    assert.match(on.light.pill, /漲停/); assert.match(on.dark.pill, /跌停/);
+    assert.match(on.light.pillEn, /LIMIT UP/); assert.match(on.dark.pillEn, /LIMIT DOWN/);
+    assert.match(on.light.icon, /📈/); assert.match(on.dark.icon, /📉/);
+    assert.notEqual(on.light.bars, on.dark.bars, '上升與下降的 K 棒圖樣不同');
+    assert.equal(on.light.blink, 'stock-lock');
+    assert.match(on.busyIcon, /📉/);
+    assert.equal(on.bar, true);
+    assert.equal(on.anim, 'slide');
+    const off = await look({ reducedMotion: 'reduce' });
+    assert.equal(off.light.blink, 'none');
+    assert.equal(off.anim, 'none');
+    assert.equal(off.full, true);
+  });
   test('語言切換後，色系選單與提示文字一起換', async () => {
     const { page } = await app({ locale: 'en-US' });
     await page.click('#paletteBtn');

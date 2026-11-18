@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Excel RevDiff Offline</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232457c5'/%3E%3Crect x='6' y='7' width='20' height='4.5' rx='2' fill='%234ade80'/%3E%3Crect x='6' y='13.75' width='20' height='4.5' rx='2' fill='%23facc15'/%3E%3Crect x='6' y='20.5' width='20' height='4.5' rx='2' fill='%23f87171'/%3E%3C/svg%3E">
-<script>/* 白名單要與 js/main.js 的 PALETTES 一致 */(function(){var th='dark',pl='default';try{var v=localStorage.getItem('revdiff-theme');if(v==='light'||v==='dark')th=v;var p=localStorage.getItem('revdiff-palette');if(p==='default'||p==='barbie'||p==='neon'||p==='win95'||p==='boba'||p==='space'||p==='hongbao')pl=p;}catch(e){}var r=document.documentElement;r.setAttribute('data-theme',th);r.setAttribute('data-palette',pl);})();</script>
+<script>/* 白名單要與 js/main.js 的 PALETTES 一致 */(function(){var th='dark',pl='default';try{var v=localStorage.getItem('revdiff-theme');if(v==='light'||v==='dark')th=v;var p=localStorage.getItem('revdiff-palette');if(p==='default'||p==='barbie'||p==='neon'||p==='win95'||p==='boba'||p==='space'||p==='hongbao'||p==='stock')pl=p;}catch(e){}var r=document.documentElement;r.setAttribute('data-theme',th);r.setAttribute('data-palette',pl);})();</script>
 <style>
 /* 【樣式規則】
    - 顏色只用 CSS 變數；新增變數時暗色（預設）與亮色兩組 :root[data-theme] 都要給值。
@@ -61,6 +61,7 @@ header .sub{color:var(--muted);font-size:12px}
 .sw-barbie{background:linear-gradient(135deg,#ff6ec7 50%,#ffc3e8 50%)}
 .sw-neon{background:conic-gradient(#ff004d,#ffae00,#37ff00,#00f0ff,#b400ff,#ff00e6,#ff004d)}
 .sw-win95{background:linear-gradient(135deg,#008080 50%,#c0c0c0 50%)}
+.sw-stock{background:linear-gradient(135deg,#d4151b 50%,#16c457 50%)}
 .sw-hongbao{background:radial-gradient(circle at 68% 68%,#ffd24a 0 24%,transparent 26%),linear-gradient(135deg,#d7192a 60%,#8a0a18)}
 .sw-space{background:radial-gradient(circle at 70% 30%,#fff 0 6%,transparent 8%),linear-gradient(135deg,#07051a 40%,#7a4dff 70%,#ff7ac2)}
 .sw-boba{background:radial-gradient(circle at 70% 70%,#2a1a10 0 22%,transparent 24%),linear-gradient(135deg,#f0d3a8 50%,#c98240 50%)}
@@ -419,6 +420,51 @@ th.dth:hover{color:var(--accent)}
 :root[data-palette="hongbao"] #busy .bar{height:16px;border:2px solid var(--line);border-radius:999px;background:var(--accent-soft)}
 :root[data-palette="hongbao"] #busy .bar i{background:radial-gradient(circle at 50% 50%,var(--coin) 0 5px,#a8741a 5px 6px,transparent 7px) 0 50%/16px 100% repeat-x}
 @media (prefers-reduced-motion:reduce){:root[data-palette="hongbao"] *{animation:none!important}:root[data-palette="hongbao"] #busy .bar i{width:100%}}
+
+/* ===== 色系：股市（淺色＝漲停紅盤，深色＝跌停綠盤。台股慣例紅漲綠跌，所以這個色系裡「新增」是紅、「刪除」是綠；標題旁的鎖死標籤會緩慢閃爍） ===== */
+:root[data-palette="stock"][data-theme="light"]{
+  --bg:#fff1f0;--panel:#fff;--text:#3a0d0d;--muted:#8a4a48;--line:#f3b3b0;--accent:#d4151b;--accent-soft:#ffe1df;
+  --add:#ffd9d6;--add-t:#a30d12;--del:#d6f5e0;--del-t:#0a6b2c;--mod:#fff1b0;--mod-t:#6b5200;--same-t:#5a2a28;
+  --old:#b00d12;--on-accent:#fff;--hover:rgba(212,21,27,.07);--grid:rgba(212,21,27,.07);--pill:#d4151b;--pill-t:#fff;
+}
+:root[data-palette="stock"][data-theme="dark"]{
+  --bg:#050f0a;--panel:#0b1a12;--text:#d9ffe6;--muted:#86c9a0;--line:#1f4a32;--accent:#2ee36b;--accent-soft:#0f3a22;
+  --add:#4a1014;--add-t:#ff8a8f;--del:#0d3d21;--del-t:#7dffa9;--mod:#3f3a0c;--mod-t:#ffe96b;--same-t:#b6e8c8;
+  --old:#ff8a8f;--on-accent:#03140a;--hover:rgba(46,227,107,.12);--grid:rgba(46,227,107,.08);--pill:#2ee36b;--pill-t:#03140a;
+}
+@keyframes stock-lock{50%{opacity:.55}}
+:root[data-palette="stock"] body{background-image:repeating-linear-gradient(0deg,var(--grid) 0 1px,transparent 1px 32px),repeating-linear-gradient(90deg,var(--grid) 0 1px,transparent 1px 32px);font-variant-numeric:tabular-nums}
+:root[data-palette="stock"]{scrollbar-color:var(--accent) transparent}
+:root[data-palette="stock"] ::selection{background:var(--accent);color:var(--on-accent)}
+:root[data-palette="stock"] header{border-bottom:3px solid var(--accent)}
+:root[data-palette="stock"] header h1{font-family:Consolas,"SFMono-Regular",Menlo,"Courier New",monospace;font-size:19px;font-weight:700;letter-spacing:.02em;color:var(--accent)}
+:root[data-palette="stock"][data-theme="light"] header h1::before{content:"📈 "}
+:root[data-palette="stock"][data-theme="dark"] header h1::before{content:"📉 "}
+:root[data-palette="stock"] header h1::after{margin-left:10px;padding:1px 8px;border-radius:4px;background:var(--pill);color:var(--pill-t);font-size:12px;letter-spacing:.06em;vertical-align:middle;animation:stock-lock 1.8s ease-in-out infinite}
+:root[data-palette="stock"][data-theme="light"] header h1::after{content:"▲ 漲停"}
+:root[data-palette="stock"][data-theme="dark"] header h1::after{content:"▼ 跌停"}
+:root[lang="en"][data-palette="stock"][data-theme="light"] header h1::after{content:"▲ LIMIT UP"}
+:root[lang="en"][data-palette="stock"][data-theme="dark"] header h1::after{content:"▼ LIMIT DOWN"}
+:root[data-palette="stock"] .card{border:1px solid var(--line);border-top:3px solid var(--accent);border-radius:6px}
+:root[data-palette="stock"] .card h2::after{margin-left:auto;color:var(--accent);font-size:14px;letter-spacing:.1em}
+:root[data-palette="stock"][data-theme="light"] .card h2::after{content:"▁▂▃▅▆▇"}
+:root[data-palette="stock"][data-theme="dark"] .card h2::after{content:"▇▆▅▃▂▁"}
+:root[data-palette="stock"] .card h2 .step{border-radius:4px}
+:root[data-palette="stock"] .stat{border-radius:6px;border-left:4px solid var(--line)}
+:root[data-palette="stock"] .stat.add{border-left-color:var(--add-t)}
+:root[data-palette="stock"] .stat.del{border-left-color:var(--del-t)}
+:root[data-palette="stock"] .stat.mod{border-left-color:var(--mod-t)}
+:root[data-palette="stock"] .stat .n,:root[data-palette="stock"] td.dlt,:root[data-palette="stock"] td.rn{font-family:Consolas,"SFMono-Regular",Menlo,"Courier New",monospace}
+:root[data-palette="stock"] button.primary{border-radius:4px;background:var(--accent);color:var(--on-accent);font-weight:700;letter-spacing:.04em}
+/* 處理中遮罩：行情視窗，進度條是一排 K 棒 */
+:root[data-palette="stock"] #busy .box{min-width:320px;border:2px solid var(--accent);border-radius:6px;text-align:left}
+:root[data-palette="stock"] #busy .t,:root[data-palette="stock"] #busy .s{font-family:Consolas,"SFMono-Regular",Menlo,"Courier New",monospace}
+:root[data-palette="stock"] #busy .t{color:var(--accent)}
+:root[data-palette="stock"][data-theme="light"] #busy .t::before{content:"📈 "}
+:root[data-palette="stock"][data-theme="dark"] #busy .t::before{content:"📉 "}
+:root[data-palette="stock"] #busy .bar{height:18px;border:1px solid var(--line);border-radius:3px;background:var(--accent-soft)}
+:root[data-palette="stock"] #busy .bar i{background:repeating-linear-gradient(90deg,var(--accent) 0 6px,transparent 6px 10px);animation:slide 1.4s linear infinite}
+@media (prefers-reduced-motion:reduce){:root[data-palette="stock"] *,:root[data-palette="stock"] *::before,:root[data-palette="stock"] *::after{animation:none!important}:root[data-palette="stock"] #busy .bar i{width:100%}}
 </style>
 </head>
 <body>
@@ -533,7 +579,7 @@ zh:{
   optHideEmpty:'隱藏全空欄位', optOnlyDiff:'只顯示 Key 與有差異的欄位',
   dTitle:'數量差值', phQ:'搜尋任何欄位（可用空白分隔多個關鍵字）', expFiltered:'僅匯出目前篩選結果', btnExport:'匯出 .xlsx',
   busyDefault:'處理中…', busyNote:'檔案較大時需要幾秒到數十秒，請稍候', elapsed:n=>`已經過 ${n} 秒`, errCompare:'比對失敗：{0}',
-  langTo:'EN', langTip:'Switch to English', themeToLight:'切換為亮色主題', themeToDark:'切換為暗色主題', palTitle:'色系', palTip:'選擇色系', pal_default:'預設', pal_barbie:'夢幻芭比', pal_neon:'七彩霓虹燈', pal_win95:'Win95 復古桌面', pal_boba:'珍珠奶茶', pal_space:'太空銀河', pal_hongbao:'過年紅包',
+  langTo:'EN', langTip:'Switch to English', themeToLight:'切換為亮色主題', themeToDark:'切換為暗色主題', palTitle:'色系', palTip:'選擇色系', pal_default:'預設', pal_barbie:'夢幻芭比', pal_neon:'七彩霓虹燈', pal_win95:'Win95 復古桌面', pal_boba:'珍珠奶茶', pal_space:'太空銀河', pal_hongbao:'過年紅包', pal_stock:'股市（漲停／跌停）',
   revA:'Rev A（舊版）', revB:'Rev B（新版）',
   dropHint:'點擊選擇檔案，或把 Excel 檔拖曳到這裡', dropFmt:'支援 .xlsx .xlsm .xlsb .xls .ods .csv',
   sheetLbl:'工作表', hrPre:'標題列在第', hrPost:'列',
@@ -589,7 +635,7 @@ en:{
   optHideEmpty:'Hide empty columns', optOnlyDiff:'Show only Key and changed columns',
   dTitle:'Quantity delta', phQ:'Search any column (space-separated keywords)', expFiltered:'Export current filter only', btnExport:'Export .xlsx',
   busyDefault:'Processing…', busyNote:'Large files can take several seconds up to a minute. Please wait.', elapsed:n=>`Elapsed: ${n} s`, errCompare:'Comparison failed: {0}',
-  langTo:'中文', langTip:'切換為中文', themeToLight:'Switch to light theme', themeToDark:'Switch to dark theme', palTitle:'Palette', palTip:'Choose a palette', pal_default:'Default', pal_barbie:'Dreamy Barbie', pal_neon:'Rainbow Neon', pal_win95:'Retro Desktop \'95', pal_boba:'Bubble Tea', pal_space:'Galaxy', pal_hongbao:'Lunar New Year',
+  langTo:'中文', langTip:'切換為中文', themeToLight:'Switch to light theme', themeToDark:'Switch to dark theme', palTitle:'Palette', palTip:'Choose a palette', pal_default:'Default', pal_barbie:'Dreamy Barbie', pal_neon:'Rainbow Neon', pal_win95:'Retro Desktop \'95', pal_boba:'Bubble Tea', pal_space:'Galaxy', pal_hongbao:'Lunar New Year', pal_stock:'Stock Market (Limit Up/Down)',
   revA:'Rev A (old)', revB:'Rev B (new)',
   dropHint:'Click to choose a file, or drag an Excel file here', dropFmt:'Supports .xlsx .xlsm .xlsb .xls .ods .csv',
   sheetLbl:'Sheet', hrPre:'Header row', hrPost:'',
@@ -1552,7 +1598,7 @@ $('#themeBtn').addEventListener('click', () => {
 });
 
 /* ----- 色系（膠囊按鈕右半邊的選單） ----- */
-const PALETTES = ['default', 'barbie', 'neon', 'win95', 'boba', 'space', 'hongbao'];   // template.html <head> 的防閃爍腳本有同一份白名單
+const PALETTES = ['default', 'barbie', 'neon', 'win95', 'boba', 'space', 'hongbao', 'stock'];   // template.html <head> 的防閃爍腳本有同一份白名單
 function curPalette(){ const p = document.documentElement.getAttribute('data-palette'); return PALETTES.includes(p) ? p : 'default'; }
 function renderPaletteMenu(){
   const cur = curPalette();
