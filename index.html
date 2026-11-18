@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Excel RevDiff Offline</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232457c5'/%3E%3Crect x='6' y='7' width='20' height='4.5' rx='2' fill='%234ade80'/%3E%3Crect x='6' y='13.75' width='20' height='4.5' rx='2' fill='%23facc15'/%3E%3Crect x='6' y='20.5' width='20' height='4.5' rx='2' fill='%23f87171'/%3E%3C/svg%3E">
-<script>/* 白名單要與 js/main.js 的 PALETTES 一致 */(function(){var th='dark',pl='default';try{var v=localStorage.getItem('revdiff-theme');if(v==='light'||v==='dark')th=v;var p=localStorage.getItem('revdiff-palette');if(p==='default'||p==='barbie'||p==='neon')pl=p;}catch(e){}var r=document.documentElement;r.setAttribute('data-theme',th);r.setAttribute('data-palette',pl);})();</script>
+<script>/* 白名單要與 js/main.js 的 PALETTES 一致 */(function(){var th='dark',pl='default';try{var v=localStorage.getItem('revdiff-theme');if(v==='light'||v==='dark')th=v;var p=localStorage.getItem('revdiff-palette');if(p==='default'||p==='barbie'||p==='neon'||p==='win95')pl=p;}catch(e){}var r=document.documentElement;r.setAttribute('data-theme',th);r.setAttribute('data-palette',pl);})();</script>
 <style>
 /* 【樣式規則】
    - 顏色只用 CSS 變數；新增變數時暗色（預設）與亮色兩組 :root[data-theme] 都要給值。
@@ -17,6 +17,7 @@
    - 色系可以連字體、裝飾、動畫一起換（芭比的手寫標題、霓虹的發光彩虹標題），但只改外觀：不可隱藏或移動功能。
      動畫要慢（一輪 ≥ 6 秒）、避免閃爍，並用 @media (prefers-reduced-motion: reduce) 關掉。
    - 「處理中」遮罩（#busy）也跟著色系換樣式；只改外觀，不可改它的結構與文字。
+   - 裝飾用的 emoji 只用 2018 年以前（Emoji 11 以前）的（例如 💖 ✨ 🚀 🥤 ⌛ 🖥）；較新的（例如 🧋 🪐 🪟）在舊版 Windows 會顯示成方塊。
    - 唯一可以寫死色碼的地方：選單裡的色系預覽色塊（.sw-*），因為它預覽的是「別的色系」。 */
 :root,:root[data-theme="dark"]{
   color-scheme:dark;
@@ -59,6 +60,7 @@ header .sub{color:var(--muted);font-size:12px}
 .sw-default{background:linear-gradient(135deg,#7aa2f7 50%,#2457c5 50%)}
 .sw-barbie{background:linear-gradient(135deg,#ff6ec7 50%,#ffc3e8 50%)}
 .sw-neon{background:conic-gradient(#ff004d,#ffae00,#37ff00,#00f0ff,#b400ff,#ff00e6,#ff004d)}
+.sw-win95{background:linear-gradient(135deg,#008080 50%,#c0c0c0 50%)}
 .pmenu .ck{margin-left:auto;visibility:hidden;color:var(--accent)}
 .pmenu button[aria-checked="true"] .ck{visibility:visible}
 .card{scroll-margin-top:72px}
@@ -252,6 +254,56 @@ th.dth:hover{color:var(--accent)}
 :root[data-palette="neon"] #busy .bar i{border-radius:999px;background:var(--rainbow);background-size:300% 100%;background-repeat:repeat-x;box-shadow:0 0 12px var(--glow);animation:slide 1.1s ease-in-out infinite alternate,neon-slide 4s linear infinite}
 @media (prefers-reduced-motion:reduce){:root[data-palette="neon"] #busy .bar i{width:100%}}
 
+
+/* ===== 色系：Win95 復古桌面（立體凹凸按鈕、灰色視窗、藍色標題列；亮＝經典灰，暗＝黑底高對比） ===== */
+:root[data-palette="win95"][data-theme="light"]{
+  --bg:#008080;--panel:#c0c0c0;--text:#000;--muted:#3a3a3a;--line:#808080;--accent:#000080;--accent-soft:#c8d4f0;
+  --add:#c8f5c8;--add-t:#0a5a0a;--del:#ffc8c8;--del-t:#8a0000;--mod:#ffffb0;--mod-t:#5a4a00;--same-t:#202020;
+  --old:#a00000;--on-accent:#fff;--hover:rgba(0,0,128,.12);
+  --bevel-hi:#fff;--bevel-lo:#404040;--sunken:#fff;--tb1:#000080;--tb2:#1084d0;
+}
+:root[data-palette="win95"][data-theme="dark"]{
+  --bg:#000;--panel:#1c1c1c;--text:#ececec;--muted:#b0b0b0;--line:#6a6a6a;--accent:#5aaeff;--accent-soft:#16304f;
+  --add:#0f3a14;--add-t:#8dff9a;--del:#4a1212;--del-t:#ff9a9a;--mod:#4a4210;--mod-t:#fff08a;--same-t:#d0d0d0;
+  --old:#ff9a8a;--on-accent:#000;--hover:rgba(90,174,255,.16);
+  --bevel-hi:#707070;--bevel-lo:#000;--sunken:#0a0a0a;--tb1:#0a2a66;--tb2:#2f6fb8;
+}
+:root[data-palette="win95"] *{border-radius:0!important}
+:root[data-palette="win95"] body{font-family:"Tahoma","MS Sans Serif","Segoe UI","DejaVu Sans",sans-serif;font-size:13px}
+:root[data-palette="win95"] header,:root[data-palette="win95"] .card,:root[data-palette="win95"] .warn,:root[data-palette="win95"] .pmenu,:root[data-palette="win95"] .drop,
+:root[data-palette="win95"] #busy .box,:root[data-palette="win95"] .splitbtn,:root[data-palette="win95"] .btn,:root[data-palette="win95"] button.primary,
+:root[data-palette="win95"] .fchip,:root[data-palette="win95"] .chip{
+  border:2px solid;border-color:var(--bevel-hi) var(--bevel-lo) var(--bevel-lo) var(--bevel-hi)}
+:root[data-palette="win95"] .btn,:root[data-palette="win95"] button.primary,:root[data-palette="win95"] .splitbtn,:root[data-palette="win95"] .pmenu,:root[data-palette="win95"] #busy .box,:root[data-palette="win95"] header{background:var(--panel);color:var(--text);box-shadow:none}
+:root[data-palette="win95"] .btn:active,:root[data-palette="win95"] button.primary:active,:root[data-palette="win95"] .fchip:active{border-color:var(--bevel-lo) var(--bevel-hi) var(--bevel-hi) var(--bevel-lo)}
+:root[data-palette="win95"] button.primary{font-weight:700;background-image:none;text-shadow:none}
+:root[data-palette="win95"] .splitbtn>button{border-width:0}
+:root[data-palette="win95"] input[type="search"],:root[data-palette="win95"] input[type="number"],:root[data-palette="win95"] select,:root[data-palette="win95"] .tw,:root[data-palette="win95"] .cfgwrap,:root[data-palette="win95"] .stat,:root[data-palette="win95"] header .ver{
+  border:2px solid;border-color:var(--bevel-lo) var(--bevel-hi) var(--bevel-hi) var(--bevel-lo)}
+:root[data-palette="win95"] input[type="search"],:root[data-palette="win95"] input[type="number"],:root[data-palette="win95"] select{background:var(--sunken);color:var(--text)}
+:root[data-palette="win95"] header .ver{background:var(--sunken);color:var(--text);padding:0 6px}
+:root[data-palette="win95"] header h1{font-size:16px;color:var(--text)}
+:root[data-palette="win95"] header h1::before{content:"🖥️ "}
+:root[data-palette="win95"] .card{padding:3px;box-shadow:none}
+:root[data-palette="win95"] .card>*{margin-left:11px;margin-right:11px}
+:root[data-palette="win95"] .card>h2{margin:0 0 12px;padding:3px 8px;background:linear-gradient(90deg,var(--tb1),var(--tb2));color:#fff;border:0;font-size:14px;gap:8px}
+:root[data-palette="win95"] .card>.hint,:root[data-palette="win95"] .card>p{margin-top:8px}
+:root[data-palette="win95"] .card>:last-child{margin-bottom:11px}
+:root[data-palette="win95"] .card h2::after{content:"_ □ ×";margin-left:auto;letter-spacing:.25em;font-weight:700}
+:root[data-palette="win95"] .card h2 .step{width:22px;height:22px;font-size:13px;background:var(--panel);color:var(--text);border:2px solid;border-color:var(--bevel-hi) var(--bevel-lo) var(--bevel-lo) var(--bevel-hi)}
+:root[data-palette="win95"] .warn{background:var(--mod);color:var(--mod-t)}
+:root[data-palette="win95"] .warn.err{background:var(--del);color:var(--del-t)}
+:root[data-palette="win95"] .pmenu button:hover,:root[data-palette="win95"] .pmenu button:focus-visible{background:var(--accent);color:var(--on-accent)}
+:root[data-palette="win95"] .pmenu .ck{color:inherit}
+/* 處理中遮罩：像「請稍候」對話框，進度條是一格一格的藍色方塊 */
+:root[data-palette="win95"] #busy{background:rgba(0,0,0,.35)}
+:root[data-palette="win95"] #busy .box{min-width:340px;padding:3px 3px 16px;text-align:left}
+:root[data-palette="win95"] #busy .t{padding:3px 8px;background:linear-gradient(90deg,var(--tb1),var(--tb2));color:#fff;font-size:13px}
+:root[data-palette="win95"] #busy .t::before{content:"⌛ "}
+:root[data-palette="win95"] #busy .s{margin:10px 12px 0}
+:root[data-palette="win95"] #busy .bar{height:22px;margin:14px 12px 0;padding:2px;background:var(--sunken);border:2px solid;border-color:var(--bevel-lo) var(--bevel-hi) var(--bevel-hi) var(--bevel-lo)}
+:root[data-palette="win95"] #busy .bar i{inset:2px auto 2px 2px;width:40%;background:repeating-linear-gradient(90deg,var(--accent) 0 10px,transparent 10px 12px);animation:slide 1.6s steps(10) infinite}
+@media (prefers-reduced-motion:reduce){:root[data-palette="win95"] #busy .bar i{animation:none;width:calc(100% - 4px)}}
 </style>
 </head>
 <body>
@@ -366,7 +418,7 @@ zh:{
   optHideEmpty:'隱藏全空欄位', optOnlyDiff:'只顯示 Key 與有差異的欄位',
   dTitle:'數量差值', phQ:'搜尋任何欄位（可用空白分隔多個關鍵字）', expFiltered:'僅匯出目前篩選結果', btnExport:'匯出 .xlsx',
   busyDefault:'處理中…', busyNote:'檔案較大時需要幾秒到數十秒，請稍候', elapsed:n=>`已經過 ${n} 秒`, errCompare:'比對失敗：{0}',
-  langTo:'EN', langTip:'Switch to English', themeToLight:'切換為亮色主題', themeToDark:'切換為暗色主題', palTitle:'色系', palTip:'選擇色系', pal_default:'預設', pal_barbie:'夢幻芭比', pal_neon:'七彩霓虹燈',
+  langTo:'EN', langTip:'Switch to English', themeToLight:'切換為亮色主題', themeToDark:'切換為暗色主題', palTitle:'色系', palTip:'選擇色系', pal_default:'預設', pal_barbie:'夢幻芭比', pal_neon:'七彩霓虹燈', pal_win95:'Win95 復古桌面',
   revA:'Rev A（舊版）', revB:'Rev B（新版）',
   dropHint:'點擊選擇檔案，或把 Excel 檔拖曳到這裡', dropFmt:'支援 .xlsx .xlsm .xlsb .xls .ods .csv',
   sheetLbl:'工作表', hrPre:'標題列在第', hrPost:'列',
@@ -422,7 +474,7 @@ en:{
   optHideEmpty:'Hide empty columns', optOnlyDiff:'Show only Key and changed columns',
   dTitle:'Quantity delta', phQ:'Search any column (space-separated keywords)', expFiltered:'Export current filter only', btnExport:'Export .xlsx',
   busyDefault:'Processing…', busyNote:'Large files can take several seconds up to a minute. Please wait.', elapsed:n=>`Elapsed: ${n} s`, errCompare:'Comparison failed: {0}',
-  langTo:'中文', langTip:'切換為中文', themeToLight:'Switch to light theme', themeToDark:'Switch to dark theme', palTitle:'Palette', palTip:'Choose a palette', pal_default:'Default', pal_barbie:'Dreamy Barbie', pal_neon:'Rainbow Neon',
+  langTo:'中文', langTip:'切換為中文', themeToLight:'Switch to light theme', themeToDark:'Switch to dark theme', palTitle:'Palette', palTip:'Choose a palette', pal_default:'Default', pal_barbie:'Dreamy Barbie', pal_neon:'Rainbow Neon', pal_win95:'Retro Desktop \'95',
   revA:'Rev A (old)', revB:'Rev B (new)',
   dropHint:'Click to choose a file, or drag an Excel file here', dropFmt:'Supports .xlsx .xlsm .xlsb .xls .ods .csv',
   sheetLbl:'Sheet', hrPre:'Header row', hrPost:'',
@@ -1385,7 +1437,7 @@ $('#themeBtn').addEventListener('click', () => {
 });
 
 /* ----- 色系（膠囊按鈕右半邊的選單） ----- */
-const PALETTES = ['default', 'barbie', 'neon'];   // template.html <head> 的防閃爍腳本有同一份白名單
+const PALETTES = ['default', 'barbie', 'neon', 'win95'];   // template.html <head> 的防閃爍腳本有同一份白名單
 function curPalette(){ const p = document.documentElement.getAttribute('data-palette'); return PALETTES.includes(p) ? p : 'default'; }
 function renderPaletteMenu(){
   const cur = curPalette();
