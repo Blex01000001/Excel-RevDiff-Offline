@@ -83,14 +83,21 @@
 - 改輸出格式（匯出 .xlsx 的欄位／版面）、引入建置工具、改架構前先問。
 - 真實資料是數萬列、約 33 欄的料表；測試時優先考慮這個規模。
 
-## Git 規則
+## Git 規則（分支加 PR，用 Rebase and merge）
 
-- 直接在 `main` 上開發並 push（`origin` 是 `Blex01000001/Excel-RevDiff-Offline`）；推上去後 GitHub Pages 自動更新、CI 自動跑。
-- 每完成一個獨立的修改就 commit。訊息第一行簡述改了什麼，需要時空一行補充原因。
-- `git push` 被拒絕（`fetch first`）代表使用者在 GitHub 上也改了東西：先 `git pull --rebase origin main`，沒有衝突再推；不要 `--force`。
-- 若改用開發分支：它的 PR 合併後，新工作先從最新 `main` 重開：`git fetch origin main && git checkout -B <開發分支> origin/main`（推送用 `--force-with-lease`）。
-- 使用者說「合併到 main」時：用可用的 GitHub 工具建立 PR 再 merge（`expectedHeadSha` 用完整 40 字元 SHA）。
-- 需要了解過去的修改時，用 `git log --oneline`。
+倉庫：`Blex01000001/Excel-RevDiff-Offline`（下稱 REPO），預設分支 `main`。**不要直接推 `main`**，除非使用者明說。
+
+1. **開分支**：每個工作都從最新 `main` 開新分支：`git fetch origin && git checkout -b <類型>/<簡短名稱> origin/main`。類型用 `feat`、`fix`、`docs`、`test`、`chore`（例：`feat/export-filter`）。若 `origin/main` 不存在（本機複本缺 fetch 設定），先執行一次 `git config remote.origin.fetch '+refs/heads/*:refs/remotes/origin/*'`。
+2. **commit**：每完成一個獨立的修改就 commit（訊息第一行簡述改了什麼，需要時空一行補充原因）；PR 以 Rebase and merge 合併，所以這些 commit 會原樣保留在 `main`。
+3. **推送並開 PR**：`git push -u origin <分支>`，再用 REST 開 PR（`gh pr create` 走 GraphQL，這個環境不能用）：
+   `gh api -X POST repos/REPO/pulls -f title=... -f head=<分支> -f base=main -f body=...`，PR 描述結尾加署名行。
+4. **等 CI**：`gh run list --repo REPO --branch <分支> --limit 1` 看到成功才合併；失敗就在同一分支修正再推。
+5. **合併**：使用者說「合併」或「合併到 main」時，用 **Rebase and merge**：
+   `gh api -X PUT repos/REPO/pulls/<N>/merge -f merge_method=rebase -f sha=<PR 最新的完整 40 字元 SHA>`。不要用 squash（會壓掉每個獨立修改的 commit），也不要用 merge commit。
+6. **合併後**：刪遠端分支 `gh api -X DELETE repos/REPO/git/refs/heads/<分支>`；本機 `git checkout main && git pull --ff-only origin main && git branch -D <分支>`。下一個工作再從最新 `main` 開新分支，不要重用舊分支。
+7. **推送被拒絕**：代表 `main` 或該分支在 GitHub 上有新的修改；`git fetch origin && git rebase origin/main` 後以 `--force-with-lease` 推回自己的分支（只限自己的分支，絕不對 `main`）。
+8. `gh` 的 GraphQL 不可用（`gh pr list`／`gh pr create` 會 403）；查 PR 用 `gh api repos/REPO/pulls?state=open`。
+9. 需要了解過去的修改時，用 `git log --oneline`。
 
 ## TODO 維護規則（`docs/TODO.md`）
 
@@ -100,7 +107,7 @@
 
 ## Commit 後的回報規則
 
-每次 commit 並 push 後，回覆必須包含以下三段，內容要和 `docs/TODO.md` 一致，每段以重點條列、保持精簡：
+每次推送分支或合併 PR 後（回覆中的 PR 要附連結，格式 `owner/repo#N`），回覆必須包含以下三段，內容要和 `docs/TODO.md` 一致，每段以重點條列、保持精簡：
 
 1. **已改善項目／問題**：這次 commit 完成了什麼。
 2. **尚待改善項目／問題、已知問題**：還沒做完的、發現但未處理的問題、已知限制。
