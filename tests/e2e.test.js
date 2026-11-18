@@ -497,50 +497,60 @@ describe('語言與主題', () => {
     assert.equal(off.anim, 'none');
     assert.equal(off.full, true);
   });
-  test('股市色系：淺色＝漲停（紅、上升）、深色＝跌停（綠、下降）；紅漲綠跌，新增紅、刪除綠；鎖死標籤與遮罩', async () => {
-    const look = async opts => {
-      const { page } = await app(opts);
-      return page.evaluate(() => {
-        const r = document.documentElement; r.dataset.palette = 'stock';
-        const rgb = s => { s = s.trim(); if (s.length === 4) s = '#' + [...s.slice(1)].map(x => x + x).join(''); return [1, 3, 5].map(i => parseInt(s.slice(i, i + 2), 16)); };
-        const out = {};
-        for (const mode of ['light', 'dark']) {
-          r.dataset.theme = mode; r.lang = 'zh-Hant';
-          const g = n => getComputedStyle(r).getPropertyValue(n);
-          const pill = () => getComputedStyle(document.querySelector('header h1'), '::after');
-          out[mode] = { accent: rgb(g('--accent')), add: rgb(g('--add-t')), del: rgb(g('--del-t')), pill: pill().content,
-                        icon: getComputedStyle(document.querySelector('header h1'), '::before').content, bars: getComputedStyle(document.querySelector('.card h2'), '::after').content,
-                        blink: pill().animationName };
-          r.lang = 'en'; out[mode].pillEn = pill().content; r.lang = 'zh-Hant';
-        }
-        r.dataset.theme = 'dark'; showBusy('x');
-        const q = (s, ps) => getComputedStyle(document.querySelector(s), ps);
-        out.busyIcon = q('#busy .t', '::before').content; out.bar = q('#busy .bar i').backgroundImage.includes('repeating-linear-gradient'); out.anim = q('#busy .bar i').animationName;
-        const bar = document.querySelector('#busy .bar'), thumb = document.querySelector('#busy .bar i');
-        out.full = thumb.getBoundingClientRect().width >= bar.getBoundingClientRect().width - 3;
-        hideBusy(); return out;
-      });
-    };
-    const on = await look();
-    const [lr, lg] = [on.light.accent[0], on.light.accent[1]], [dr, dg] = [on.dark.accent[0], on.dark.accent[1]];
-    assert.ok(lr > lg * 2, '淺色（漲停）的主色是紅色：' + on.light.accent);
-    assert.ok(dg > dr * 2, '深色（跌停）的主色是綠色：' + on.dark.accent);
+  test('股市色系：淺色＝漲停（綠、上升）、深色＝跌停（紅、下降）；國際慣例綠漲紅跌，新增綠、刪除紅；鎖死標籤', async () => {
+    const { page } = await app();
+    const out = await page.evaluate(() => {
+      const r = document.documentElement; r.dataset.palette = 'stock';
+      const rgb = s => { s = s.trim(); if (s.length === 4) s = '#' + [...s.slice(1)].map(x => x + x).join(''); return [1, 3, 5].map(i => parseInt(s.slice(i, i + 2), 16)); };
+      const res = {};
+      for (const mode of ['light', 'dark']) {
+        r.dataset.theme = mode; r.lang = 'zh-Hant';
+        const g = n => getComputedStyle(r).getPropertyValue(n);
+        const pill = () => getComputedStyle(document.querySelector('header h1'), '::after');
+        res[mode] = { accent: rgb(g('--accent')), add: rgb(g('--add-t')), del: rgb(g('--del-t')), pill: pill().content, blink: pill().animationName,
+                      icon: getComputedStyle(document.querySelector('header h1'), '::before').content, bars: getComputedStyle(document.querySelector('.card h2'), '::after').content };
+        r.lang = 'en'; res[mode].pillEn = pill().content; r.lang = 'zh-Hant';
+      }
+      return res;
+    });
+    assert.ok(out.light.accent[1] > out.light.accent[0] * 2, '淺色（漲停）的主色是綠色：' + out.light.accent);
+    assert.ok(out.dark.accent[0] > out.dark.accent[1] * 2, '深色（跌停）的主色是紅色：' + out.dark.accent);
     for (const m of ['light', 'dark']) {
-      assert.ok(on[m].add[0] > on[m].add[1], `${m}：新增（漲）是紅色系`);
-      assert.ok(on[m].del[1] > on[m].del[0], `${m}：刪除（跌）是綠色系`);
+      assert.ok(out[m].add[1] > out[m].add[0], `${m}：新增（漲）是綠色系`);
+      assert.ok(out[m].del[0] > out[m].del[1], `${m}：刪除（跌）是紅色系`);
     }
-    assert.match(on.light.pill, /漲停/); assert.match(on.dark.pill, /跌停/);
-    assert.match(on.light.pillEn, /LIMIT UP/); assert.match(on.dark.pillEn, /LIMIT DOWN/);
-    assert.match(on.light.icon, /📈/); assert.match(on.dark.icon, /📉/);
-    assert.notEqual(on.light.bars, on.dark.bars, '上升與下降的 K 棒圖樣不同');
-    assert.equal(on.light.blink, 'stock-lock');
-    assert.match(on.busyIcon, /📉/);
-    assert.equal(on.bar, true);
-    assert.equal(on.anim, 'slide');
-    const off = await look({ reducedMotion: 'reduce' });
-    assert.equal(off.light.blink, 'none');
-    assert.equal(off.anim, 'none');
-    assert.equal(off.full, true);
+    assert.match(out.light.pill, /漲停/); assert.match(out.dark.pill, /跌停/);
+    assert.match(out.light.pillEn, /LIMIT UP/); assert.match(out.dark.pillEn, /LIMIT DOWN/);
+    assert.match(out.light.icon, /📈/); assert.match(out.dark.icon, /📉/);
+    assert.notEqual(out.light.bars, out.dark.bars, '上升與下降的 K 棒圖樣不同');
+    assert.equal(out.light.blink, 'stock-lock');
+    const off = await app({ reducedMotion: 'reduce' });
+    assert.equal(await off.page.evaluate(() => { document.documentElement.dataset.palette = 'stock'; return getComputedStyle(document.querySelector('header h1'), '::after').animationName; }), 'none');
+  });
+  test('股市色系的處理中遮罩：8 根 K 棒依序長出來，淺色往上漲、深色往下跌；減少動態時直接顯示完整 K 線', async () => {
+    const probe = async (mode, opts) => {
+      const { page } = await app(opts);
+      await page.evaluate(m => { document.documentElement.dataset.palette = 'stock'; document.documentElement.dataset.theme = m; showBusy('x'); }, mode);
+      const read = () => page.evaluate(() => {
+        const i = document.querySelector('#busy .bar i'), cs = getComputedStyle(i);
+        return { p: parseFloat(cs.getPropertyValue('--p')), anim: cs.animationName, layers: (cs.backgroundImage.match(/linear-gradient\(/g) || []).length, posY: cs.backgroundPositionY, icon: getComputedStyle(document.querySelector('#busy .t'), '::before').content };
+      });
+      const samples = [await read()];
+      for (let n = 0; n < 3; n++) { await page.waitForTimeout(400); samples.push(await read()); }
+      return samples;
+    };
+    const up = await probe('light'), down = await probe('dark');
+    for (const sm of [up, down]) {
+      assert.equal(sm[0].anim, 'stock-chart');
+      assert.equal(sm[0].layers, 16, '8 根 K 棒，每根一個實體加一條影線');
+      assert.ok(sm.every(x => x.p >= 0 && x.p <= 8), '進度 --p 在 0 到 8 之間');
+      assert.ok(new Set(sm.map(x => x.p)).size > 2, '--p 隨時間變化（K 棒一根根長出來）：' + sm.map(x => x.p.toFixed(1)));
+    }
+    assert.match(up[0].posY, /calc\(100%/, '淺色（上漲）K 棒貼著底邊往上長');
+    assert.doesNotMatch(down[0].posY, /%/, '深色（下跌）K 棒貼著頂邊往下長');
+    assert.match(up[0].icon, /📈/); assert.match(down[0].icon, /📉/);
+    const still = await probe('dark', { reducedMotion: 'reduce' });
+    assert.ok(still.every(x => x.anim === 'none' && x.p === 8), '減少動態：不動，且 8 根全部顯示');
   });
   test('語言切換後，色系選單與提示文字一起換', async () => {
     const { page } = await app({ locale: 'en-US' });

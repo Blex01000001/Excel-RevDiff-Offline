@@ -421,18 +421,21 @@ th.dth:hover{color:var(--accent)}
 :root[data-palette="hongbao"] #busy .bar i{background:radial-gradient(circle at 50% 50%,var(--coin) 0 5px,#a8741a 5px 6px,transparent 7px) 0 50%/16px 100% repeat-x}
 @media (prefers-reduced-motion:reduce){:root[data-palette="hongbao"] *{animation:none!important}:root[data-palette="hongbao"] #busy .bar i{width:100%}}
 
-/* ===== 色系：股市（淺色＝漲停紅盤，深色＝跌停綠盤。台股慣例紅漲綠跌，所以這個色系裡「新增」是紅、「刪除」是綠；標題旁的鎖死標籤會緩慢閃爍） ===== */
+/* ===== 色系：股市（淺色＝漲停綠盤、深色＝跌停紅盤；採國際慣例：綠漲紅跌，所以新增是綠、刪除是紅。標題旁的鎖死標籤會緩慢閃爍；
+   處理中遮罩是一段 K 線依序長出來：淺色一路往上漲、深色一路往下跌） ===== */
 :root[data-palette="stock"][data-theme="light"]{
-  --bg:#fff1f0;--panel:#fff;--text:#3a0d0d;--muted:#8a4a48;--line:#f3b3b0;--accent:#d4151b;--accent-soft:#ffe1df;
-  --add:#ffd9d6;--add-t:#a30d12;--del:#d6f5e0;--del-t:#0a6b2c;--mod:#fff1b0;--mod-t:#6b5200;--same-t:#5a2a28;
-  --old:#b00d12;--on-accent:#fff;--hover:rgba(212,21,27,.07);--grid:rgba(212,21,27,.07);--pill:#d4151b;--pill-t:#fff;
+  --bg:#f0fff4;--panel:#fff;--text:#0b2e18;--muted:#3f6b50;--line:#b6e6c6;--accent:#0a8f3c;--accent-soft:#d9f7e3;
+  --add:#d4f5df;--add-t:#0a6b2c;--del:#ffd9d6;--del-t:#a30d12;--mod:#fff1b0;--mod-t:#6b5200;--same-t:#244d33;
+  --old:#b00d12;--on-accent:#fff;--hover:rgba(10,143,60,.07);--grid:rgba(10,143,60,.08);--pill:#0a8f3c;--pill-t:#fff;
 }
 :root[data-palette="stock"][data-theme="dark"]{
-  --bg:#050f0a;--panel:#0b1a12;--text:#d9ffe6;--muted:#86c9a0;--line:#1f4a32;--accent:#2ee36b;--accent-soft:#0f3a22;
-  --add:#4a1014;--add-t:#ff8a8f;--del:#0d3d21;--del-t:#7dffa9;--mod:#3f3a0c;--mod-t:#ffe96b;--same-t:#b6e8c8;
-  --old:#ff8a8f;--on-accent:#03140a;--hover:rgba(46,227,107,.12);--grid:rgba(46,227,107,.08);--pill:#2ee36b;--pill-t:#03140a;
+  --bg:#12060a;--panel:#1d0c10;--text:#ffe1e3;--muted:#e0a0a6;--line:#5a1f28;--accent:#ff4d5a;--accent-soft:#3d1218;
+  --add:#0d3d21;--add-t:#7dffa9;--del:#4a1014;--del-t:#ff8a8f;--mod:#3f3a0c;--mod-t:#ffe96b;--same-t:#f0c4c8;
+  --old:#ff8a8f;--on-accent:#1d0c10;--hover:rgba(255,77,90,.12);--grid:rgba(255,77,90,.09);--pill:#ff4d5a;--pill-t:#1d0c10;
 }
 @keyframes stock-lock{50%{opacity:.55}}
+@property --p{syntax:'<number>';inherits:false;initial-value:0}
+@keyframes stock-chart{0%{--p:0}80%{--p:8}100%{--p:8}}
 :root[data-palette="stock"] body{background-image:repeating-linear-gradient(0deg,var(--grid) 0 1px,transparent 1px 32px),repeating-linear-gradient(90deg,var(--grid) 0 1px,transparent 1px 32px);font-variant-numeric:tabular-nums}
 :root[data-palette="stock"]{scrollbar-color:var(--accent) transparent}
 :root[data-palette="stock"] ::selection{background:var(--accent);color:var(--on-accent)}
@@ -456,15 +459,49 @@ th.dth:hover{color:var(--accent)}
 :root[data-palette="stock"] .stat.mod{border-left-color:var(--mod-t)}
 :root[data-palette="stock"] .stat .n,:root[data-palette="stock"] td.dlt,:root[data-palette="stock"] td.rn{font-family:Consolas,"SFMono-Regular",Menlo,"Courier New",monospace}
 :root[data-palette="stock"] button.primary{border-radius:4px;background:var(--accent);color:var(--on-accent);font-weight:700;letter-spacing:.04em}
-/* 處理中遮罩：行情視窗，進度條是一排 K 棒 */
+/* 處理中遮罩：行情視窗；進度條位置換成一段 K 線，8 根 K 棒依序長出來（--p 從 0 跑到 8），長完停一下再重來 */
 :root[data-palette="stock"] #busy .box{min-width:320px;border:2px solid var(--accent);border-radius:6px;text-align:left}
 :root[data-palette="stock"] #busy .t,:root[data-palette="stock"] #busy .s{font-family:Consolas,"SFMono-Regular",Menlo,"Courier New",monospace}
 :root[data-palette="stock"] #busy .t{color:var(--accent)}
 :root[data-palette="stock"][data-theme="light"] #busy .t::before{content:"📈 "}
 :root[data-palette="stock"][data-theme="dark"] #busy .t::before{content:"📉 "}
-:root[data-palette="stock"] #busy .bar{height:18px;border:1px solid var(--line);border-radius:3px;background:var(--accent-soft)}
-:root[data-palette="stock"] #busy .bar i{background:repeating-linear-gradient(90deg,var(--accent) 0 6px,transparent 6px 10px);animation:slide 1.4s linear infinite}
-@media (prefers-reduced-motion:reduce){:root[data-palette="stock"] *,:root[data-palette="stock"] *::before,:root[data-palette="stock"] *::after{animation:none!important}:root[data-palette="stock"] #busy .bar i{width:100%}}
+:root[data-palette="stock"] #busy .bar{height:56px;border:1px solid var(--line);border-radius:3px;background:repeating-linear-gradient(0deg,var(--grid) 0 1px,transparent 1px 14px),var(--accent-soft)}
+:root[data-palette="stock"] #busy .bar i{inset:0;width:100%;animation:stock-chart 2.8s linear infinite}
+:root[data-palette="stock"][data-theme="light"] #busy .bar i{background:
+    linear-gradient(var(--accent),var(--accent)) 14px calc(100% - 6px) / 10px calc(min(1,max(0,var(--p) - 0)) * 18px) no-repeat,
+    linear-gradient(var(--accent),var(--accent)) 18px calc(100% - 2px) / 2px calc(min(1,max(0,var(--p) - 0)) * 27px) no-repeat,
+    linear-gradient(var(--accent),var(--accent)) 43px calc(100% - 10px) / 10px calc(min(1,max(0,var(--p) - 1)) * 18px) no-repeat,
+    linear-gradient(var(--accent),var(--accent)) 47px calc(100% - 6px) / 2px calc(min(1,max(0,var(--p) - 1)) * 27px) no-repeat,
+    linear-gradient(var(--accent),var(--accent)) 72px calc(100% - 14px) / 10px calc(min(1,max(0,var(--p) - 2)) * 18px) no-repeat,
+    linear-gradient(var(--accent),var(--accent)) 76px calc(100% - 10px) / 2px calc(min(1,max(0,var(--p) - 2)) * 27px) no-repeat,
+    linear-gradient(var(--accent),var(--accent)) 101px calc(100% - 18px) / 10px calc(min(1,max(0,var(--p) - 3)) * 18px) no-repeat,
+    linear-gradient(var(--accent),var(--accent)) 105px calc(100% - 14px) / 2px calc(min(1,max(0,var(--p) - 3)) * 27px) no-repeat,
+    linear-gradient(var(--accent),var(--accent)) 130px calc(100% - 22px) / 10px calc(min(1,max(0,var(--p) - 4)) * 18px) no-repeat,
+    linear-gradient(var(--accent),var(--accent)) 134px calc(100% - 18px) / 2px calc(min(1,max(0,var(--p) - 4)) * 27px) no-repeat,
+    linear-gradient(var(--accent),var(--accent)) 159px calc(100% - 26px) / 10px calc(min(1,max(0,var(--p) - 5)) * 18px) no-repeat,
+    linear-gradient(var(--accent),var(--accent)) 163px calc(100% - 22px) / 2px calc(min(1,max(0,var(--p) - 5)) * 27px) no-repeat,
+    linear-gradient(var(--accent),var(--accent)) 188px calc(100% - 30px) / 10px calc(min(1,max(0,var(--p) - 6)) * 18px) no-repeat,
+    linear-gradient(var(--accent),var(--accent)) 192px calc(100% - 26px) / 2px calc(min(1,max(0,var(--p) - 6)) * 27px) no-repeat,
+    linear-gradient(var(--accent),var(--accent)) 217px calc(100% - 34px) / 10px calc(min(1,max(0,var(--p) - 7)) * 18px) no-repeat,
+    linear-gradient(var(--accent),var(--accent)) 221px calc(100% - 30px) / 2px calc(min(1,max(0,var(--p) - 7)) * 27px) no-repeat}
+:root[data-palette="stock"][data-theme="dark"] #busy .bar i{background:
+    linear-gradient(var(--accent),var(--accent)) 14px 6px / 10px calc(min(1,max(0,var(--p) - 0)) * 18px) no-repeat,
+    linear-gradient(var(--accent),var(--accent)) 18px 1px / 2px calc(min(1,max(0,var(--p) - 0)) * 27px) no-repeat,
+    linear-gradient(var(--accent),var(--accent)) 43px 10px / 10px calc(min(1,max(0,var(--p) - 1)) * 18px) no-repeat,
+    linear-gradient(var(--accent),var(--accent)) 47px 5px / 2px calc(min(1,max(0,var(--p) - 1)) * 27px) no-repeat,
+    linear-gradient(var(--accent),var(--accent)) 72px 14px / 10px calc(min(1,max(0,var(--p) - 2)) * 18px) no-repeat,
+    linear-gradient(var(--accent),var(--accent)) 76px 9px / 2px calc(min(1,max(0,var(--p) - 2)) * 27px) no-repeat,
+    linear-gradient(var(--accent),var(--accent)) 101px 18px / 10px calc(min(1,max(0,var(--p) - 3)) * 18px) no-repeat,
+    linear-gradient(var(--accent),var(--accent)) 105px 13px / 2px calc(min(1,max(0,var(--p) - 3)) * 27px) no-repeat,
+    linear-gradient(var(--accent),var(--accent)) 130px 22px / 10px calc(min(1,max(0,var(--p) - 4)) * 18px) no-repeat,
+    linear-gradient(var(--accent),var(--accent)) 134px 17px / 2px calc(min(1,max(0,var(--p) - 4)) * 27px) no-repeat,
+    linear-gradient(var(--accent),var(--accent)) 159px 26px / 10px calc(min(1,max(0,var(--p) - 5)) * 18px) no-repeat,
+    linear-gradient(var(--accent),var(--accent)) 163px 21px / 2px calc(min(1,max(0,var(--p) - 5)) * 27px) no-repeat,
+    linear-gradient(var(--accent),var(--accent)) 188px 30px / 10px calc(min(1,max(0,var(--p) - 6)) * 18px) no-repeat,
+    linear-gradient(var(--accent),var(--accent)) 192px 25px / 2px calc(min(1,max(0,var(--p) - 6)) * 27px) no-repeat,
+    linear-gradient(var(--accent),var(--accent)) 217px 34px / 10px calc(min(1,max(0,var(--p) - 7)) * 18px) no-repeat,
+    linear-gradient(var(--accent),var(--accent)) 221px 29px / 2px calc(min(1,max(0,var(--p) - 7)) * 27px) no-repeat}
+@media (prefers-reduced-motion:reduce){:root[data-palette="stock"] *,:root[data-palette="stock"] *::before,:root[data-palette="stock"] *::after{animation:none!important}:root[data-palette="stock"] #busy .bar i{--p:8}}
 </style>
 </head>
 <body>
