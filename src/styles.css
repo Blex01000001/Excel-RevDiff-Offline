@@ -52,6 +52,7 @@ header .sub{color:var(--muted);font-size:12px}
 .sw-barbie{background:linear-gradient(135deg,#ff6ec7 50%,#ffc3e8 50%)}
 .sw-neon{background:conic-gradient(#ff004d,#ffae00,#37ff00,#00f0ff,#b400ff,#ff00e6,#ff004d)}
 .sw-win95{background:linear-gradient(135deg,#008080 50%,#c0c0c0 50%)}
+.sw-space{background:radial-gradient(circle at 70% 30%,#fff 0 6%,transparent 8%),linear-gradient(135deg,#07051a 40%,#7a4dff 70%,#ff7ac2)}
 .sw-boba{background:radial-gradient(circle at 70% 70%,#2a1a10 0 22%,transparent 24%),linear-gradient(135deg,#f0d3a8 50%,#c98240 50%)}
 .pmenu .ck{margin-left:auto;visibility:hidden;color:var(--accent)}
 .pmenu button[aria-checked="true"] .ck{visibility:visible}
@@ -328,3 +329,44 @@ th.dth:hover{color:var(--accent)}
 :root[data-palette="boba"] #busy .bar{height:16px;border:2px solid var(--line);border-radius:999px;background:var(--accent-soft)}
 :root[data-palette="boba"] #busy .bar i{background:radial-gradient(circle at 50% 50%,var(--pearl) 0 5px,transparent 6px) 0 50%/16px 100% repeat-x}
 @media (prefers-reduced-motion:reduce){:root[data-palette="boba"] #busy .bar i{animation:none;width:100%}}
+
+/* ===== 色系：太空銀河（暗＝宇宙星空，亮＝日間太空；星星緩慢閃爍，遮罩裡有一枚火箭飛過進度條） ===== */
+:root[data-palette="space"][data-theme="dark"]{
+  --bg:#07051a;--panel:#120e33;--text:#e8e6ff;--muted:#a49fe0;--line:#33298a;--accent:#9d7bff;--accent-soft:#241a5c;
+  --add:#0b3a3a;--add-t:#6ff7e1;--del:#43123a;--del-t:#ff8ac8;--mod:#3d3410;--mod-t:#ffe27a;--same-t:#c5c0ff;
+  --old:#ff7ab0;--on-accent:#0a0620;--hover:rgba(157,123,255,.16);--glow:rgba(157,123,255,.45);--star:#fff;
+  --bg-image:radial-gradient(circle at 10% 8%,rgba(157,123,255,.30),transparent 40%),radial-gradient(circle at 90% 16%,rgba(0,220,255,.18),transparent 42%),radial-gradient(circle at 50% 106%,rgba(255,90,190,.20),transparent 50%);
+}
+:root[data-palette="space"][data-theme="light"]{
+  --bg:#eceaff;--panel:#fff;--text:#1d1850;--muted:#554f96;--line:#cfc8ff;--accent:#5b3fd6;--accent-soft:#e3dcff;
+  --add:#d4fbf0;--add-t:#006b5a;--del:#ffd6ec;--del-t:#a30b5e;--mod:#fff2b3;--mod-t:#6b5200;--same-t:#463f8a;
+  --old:#c4003a;--on-accent:#fff;--hover:rgba(91,63,214,.08);--glow:rgba(91,63,214,.25);--star:#7a63e6;
+  --bg-image:radial-gradient(circle at 10% 8%,rgba(157,123,255,.22),transparent 40%),radial-gradient(circle at 90% 16%,rgba(0,200,255,.14),transparent 42%),radial-gradient(circle at 50% 106%,rgba(255,110,200,.16),transparent 50%);
+}
+@keyframes space-twinkle{from{opacity:.45}to{opacity:1}}
+:root[data-palette="space"]{scrollbar-color:var(--accent) transparent}
+:root[data-palette="space"] ::selection{background:var(--accent);color:var(--on-accent)}
+:root[data-palette="space"] body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background-size:420px 420px;animation:space-twinkle 9s ease-in-out infinite alternate;
+  background-image:radial-gradient(1px 1px at 40px 60px,var(--star) 50%,transparent 51%),radial-gradient(1.5px 1.5px at 130px 220px,var(--star) 50%,transparent 51%),radial-gradient(1px 1px at 250px 90px,var(--star) 50%,transparent 51%),
+    radial-gradient(1px 1px at 330px 300px,var(--star) 50%,transparent 51%),radial-gradient(2px 2px at 90px 360px,var(--star) 50%,transparent 51%),radial-gradient(1px 1px at 380px 40px,var(--star) 50%,transparent 51%),
+    radial-gradient(1.5px 1.5px at 200px 330px,var(--star) 50%,transparent 51%),radial-gradient(1px 1px at 20px 200px,var(--star) 50%,transparent 51%),radial-gradient(1px 1px at 300px 180px,var(--star) 50%,transparent 51%)}
+:root[data-palette="space"] header{border-bottom:1px solid var(--line);box-shadow:0 2px 22px var(--glow)}
+:root[data-palette="space"] header h1,:root[data-palette="space"] .card h2,:root[data-palette="space"] #busy .t{font-family:"Orbitron","Eurostile","Bahnschrift","Century Gothic","Trebuchet MS",sans-serif}
+:root[data-palette="space"] header h1{font-size:20px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);text-shadow:0 0 14px var(--glow)}
+:root[data-palette="space"] header h1::before{content:"🚀 "}
+:root[data-palette="space"] .card{position:relative;border:1px solid var(--line);border-radius:16px;box-shadow:0 0 24px var(--glow)}
+:root[data-palette="space"] .card::before{content:"";position:absolute;left:-1px;right:-1px;top:-3px;height:3px;border-radius:16px 16px 0 0;background:linear-gradient(90deg,#9d7bff,#35e6ff,#ff7ac2)}
+:root[data-palette="space"] .card h2{letter-spacing:.05em}
+:root[data-palette="space"] .card h2::after{content:"🌌";margin-left:auto}
+:root[data-palette="space"] .card h2 .step{background:radial-gradient(circle at 32% 30%,#ffe1a8,#9d7bff 55%,#2b1d78);color:#fff;box-shadow:0 0 12px var(--glow)}
+:root[data-palette="space"] .stat .n{text-shadow:0 0 12px currentColor}
+:root[data-palette="space"] button.primary{background-image:linear-gradient(90deg,#9d7bff,#35e6ff);color:#0a0620;box-shadow:0 0 14px var(--glow)}
+:root[data-palette="space"] .splitbtn{box-shadow:0 0 10px var(--glow)}
+/* 處理中遮罩：火箭沿著進度條往右飛 */
+:root[data-palette="space"] #busy{background:rgba(3,2,16,.72);backdrop-filter:blur(2px)}
+:root[data-palette="space"] #busy .box{border:1px solid var(--accent);border-radius:16px;box-shadow:0 0 32px var(--glow)}
+:root[data-palette="space"] #busy .t::before{content:"🌌 "}
+:root[data-palette="space"] #busy .bar{height:6px;margin-top:22px;overflow:visible;background:var(--accent-soft)}
+:root[data-palette="space"] #busy .bar i{width:40%;background:linear-gradient(90deg,transparent,var(--accent) 70%,#35e6ff);animation:slide 1.8s linear infinite}
+:root[data-palette="space"] #busy .bar i::after{content:"🚀";position:absolute;right:-9px;top:-12px;font-size:20px;line-height:1;transform:rotate(45deg)}
+@media (prefers-reduced-motion:reduce){:root[data-palette="space"] *,:root[data-palette="space"] *::before,:root[data-palette="space"] *::after{animation:none!important}:root[data-palette="space"] #busy .bar i{width:100%}}

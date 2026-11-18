@@ -440,6 +440,34 @@ describe('語言與主題', () => {
     assert.equal(off.anim, 'none');
     assert.equal(off.full, true);
   });
+  test('太空銀河色系：星空閃爍、火箭飛過進度條；減少動態時全部停止、進度條靜態', async () => {
+    const look = async opts => {
+      const { page } = await app(opts);
+      return page.evaluate(() => {
+        document.documentElement.dataset.palette = 'space';
+        const q = (s, ps) => getComputedStyle(document.querySelector(s), ps);
+        const out = { stars: q('body', '::before').animationName, starImg: q('body', '::before').backgroundImage.includes('radial-gradient'),
+                      bar: q('.card', '::before').backgroundImage.includes('linear-gradient'), icon: q('header h1', '::before').content };
+        showBusy('x');
+        out.rocket = q('#busy .bar i', '::after').content; out.anim = q('#busy .bar i').animationName; out.busyTitle = q('#busy .t', '::before').content;
+        const bar = document.querySelector('#busy .bar'), thumb = document.querySelector('#busy .bar i');
+        out.full = thumb.getBoundingClientRect().width >= bar.getBoundingClientRect().width - 2;
+        hideBusy(); return out;
+      });
+    };
+    const on = await look();
+    assert.equal(on.stars, 'space-twinkle');
+    assert.equal(on.starImg, true);
+    assert.equal(on.bar, true);
+    assert.match(on.icon, /🚀/);
+    assert.match(on.rocket, /🚀/);
+    assert.equal(on.anim, 'slide');
+    assert.match(on.busyTitle, /🌌/);
+    const off = await look({ reducedMotion: 'reduce' });
+    assert.equal(off.stars, 'none');
+    assert.equal(off.anim, 'none');
+    assert.equal(off.full, true);
+  });
   test('語言切換後，色系選單與提示文字一起換', async () => {
     const { page } = await app({ locale: 'en-US' });
     await page.click('#paletteBtn');
