@@ -383,6 +383,36 @@ describe('語言與主題', () => {
     });
     assert.deepEqual(r, { titleAnim: 'none', thumbAnim: 'none', full: true });
   });
+  test('Win95 色系：立體凹凸邊框、方角、標題列、一格一格的進度條；減少動態時進度條靜態', async () => {
+    const look = async opts => {
+      const { page } = await app(opts);
+      return page.evaluate(() => {
+        document.documentElement.dataset.palette = 'win95';
+        const q = (s, ps) => getComputedStyle(document.querySelector(s), ps);
+        const card = q('.card');
+        const out = { raised: card.borderTopColor !== card.borderBottomColor, radius: [card.borderTopLeftRadius, q('button.primary').borderTopLeftRadius],
+                      title: q('.card h2').backgroundImage.includes('linear-gradient'), icon: q('header h1', '::before').content };
+        showBusy('x');
+        out.box = q('#busy .box').borderTopLeftRadius; out.bar = q('#busy .bar i').backgroundImage.includes('repeating-linear-gradient');
+        out.busyTitle = q('#busy .t', '::before').content; out.anim = q('#busy .bar i').animationName;
+        const bar = document.querySelector('#busy .bar'), thumb = document.querySelector('#busy .bar i');
+        out.full = thumb.getBoundingClientRect().width >= bar.getBoundingClientRect().width - 9;
+        hideBusy(); return out;
+      });
+    };
+    const on = await look();
+    assert.equal(on.raised, true, '凸起邊框（亮邊與暗邊不同色）');
+    assert.deepEqual(on.radius, ['0px', '0px']);
+    assert.equal(on.title, true);
+    assert.match(on.icon, /🖥/);
+    assert.equal(on.box, '0px');
+    assert.equal(on.bar, true);
+    assert.match(on.busyTitle, /⌛/);
+    assert.equal(on.anim, 'slide');
+    const off = await look({ reducedMotion: 'reduce' });
+    assert.equal(off.anim, 'none');
+    assert.equal(off.full, true);
+  });
   test('語言切換後，色系選單與提示文字一起換', async () => {
     const { page } = await app({ locale: 'en-US' });
     await page.click('#paletteBtn');

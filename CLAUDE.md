@@ -44,7 +44,7 @@
 - **升版本** → 只改 `src/VERSION` 再建置。只修錯誤或微調 → patch；新增功能且相容 → minor；使用方式不相容 → major。
 - **新增原始檔** → 在 `src/template.html` 加一行 `/*__INCLUDE:路徑__*/`（順序就是執行順序），檔頭寫上該檔的規則，並更新檔案地圖。
 
-指令：`npm test`（42 個端對端測試，約 15 秒）、`npm run test:verbose`（列出每個案例，CI 用）、`npm run perf`、`npm run check:build`。
+指令：`npm test`（43 個端對端測試，約 15 秒）、`npm run test:verbose`（列出每個案例，CI 用）、`npm run perf`、`npm run check:build`。
 
 ## 架構決策（不要改回去）
 
