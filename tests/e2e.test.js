@@ -246,7 +246,9 @@ describe('語言與主題', () => {
     assert.equal(await page.locator('#paletteMenu').isHidden(), true);
     await page.click('#paletteBtn');
     assert.equal(await page.getAttribute('#paletteBtn', 'aria-expanded'), 'true');
-    assert.deepEqual(await page.$$eval('#paletteMenu [role="menuitemradio"]', b => b.map(x => [x.dataset.p, x.getAttribute('aria-checked')])), [['default', 'true'], ['barbie', 'false'], ['neon', 'false']]);
+    const ids = await page.evaluate(() => PALETTES);
+    assert.equal(ids[0], 'default');
+    assert.deepEqual(await page.$$eval('#paletteMenu [role="menuitemradio"]', b => b.map(x => [x.dataset.p, x.getAttribute('aria-checked')])), ids.map((id, i) => [id, i === 0 ? 'true' : 'false']));
     const before = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
     await page.click('#paletteMenu [data-p="barbie"]');
     assert.deepEqual(await attrs(page), { theme: 'dark', palette: 'barbie' });
@@ -295,6 +297,35 @@ describe('語言與主題', () => {
         assert.equal(new Set(v).size, 4, `${palette}/${theme}：${v.join(' ')}`);
       }
     }
+  });
+  test('每個色系都有中英文名稱與色塊預覽', async () => {
+    const { page } = await app();
+    const r = await page.evaluate(() => PALETTES.map(id => [id, I18N.zh['pal_' + id], I18N.en['pal_' + id]]));
+    for (const [id, zh, en] of r) { assert.ok(zh && en, `${id} 缺中文或英文名稱`); }
+    await page.click('#paletteBtn');
+    const sw = await page.$$eval('#paletteMenu .sw', els => els.map(e => getComputedStyle(e).backgroundImage));
+    assert.equal(sw.length, r.length);
+    assert.ok(sw.every(x => x !== 'none'), '每個色系都要有 .sw-<id> 色塊：' + sw);
+  });
+  test('每個色系、每種模式的文字對比度都達標（文字／面板 ≥ 7、次要文字 ≥ 4.5、狀態色 ≥ 4.5、按鈕字 ≥ 3）', async () => {
+    const { page } = await app();
+    const bad = await page.evaluate(() => {
+      const lum = c => { const [r, g, b] = c.map(v => { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); }); return .2126 * r + .7152 * g + .0722 * b; };
+      const rgb = s => { s = s.trim(); if (s[0] === '#') { if (s.length === 4) s = '#' + [...s.slice(1)].map(x => x + x).join(''); return [1, 3, 5].map(i => parseInt(s.slice(i, i + 2), 16)); } return s.match(/[\d.]+/g).map(Number).slice(0, 3); };
+      const cr = (a, b) => { const x = lum(rgb(a)), y = lum(rgb(b)); return (Math.max(x, y) + .05) / (Math.min(x, y) + .05); };
+      const out = [];
+      for (const p of PALETTES) for (const t of ['dark', 'light']) {
+        const r = document.documentElement; r.dataset.palette = p; r.dataset.theme = t;
+        const g = n => getComputedStyle(r).getPropertyValue(n);
+        for (const [name, fg, bg, min] of [['text/panel', '--text', '--panel', 7], ['muted/panel', '--muted', '--panel', 4.5], ['add', '--add-t', '--add', 4.5],
+          ['del', '--del-t', '--del', 4.5], ['mod', '--mod-t', '--mod', 4.5], ['on-accent/accent', '--on-accent', '--accent', 3]]) {
+          const v = cr(g(fg), g(bg));
+          if (v < min) out.push(`${p}/${t} ${name} = ${v.toFixed(1)} (< ${min})`);
+        }
+      }
+      return out;
+    });
+    assert.deepEqual(bad, []);
   });
   test('每個色系都能選取，重新整理後仍被記住（防止新增色系時漏改 <head> 的白名單）', async () => {
     const { page } = await app();
