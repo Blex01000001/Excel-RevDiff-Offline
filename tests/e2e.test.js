@@ -322,6 +322,36 @@ describe('語言與主題', () => {
     const plain = await app();
     assert.deepEqual(await anim(plain.page), ['none', 'none', 'none'], '預設色系沒有動畫');
   });
+  test('處理中遮罩跟著色系換樣式（芭比、霓虹各有專屬樣式，預設不變）', async () => {
+    const { page } = await app();
+    const look = pal => page.evaluate(p => {
+      document.documentElement.dataset.palette = p; showBusy('x');
+      const q = (s, pseudo) => getComputedStyle(document.querySelector(s), pseudo);
+      const r = { radius: q('#busy .box').borderTopLeftRadius, titleFont: q('#busy .t').fontFamily, titleAnim: q('#busy .t').animationName,
+                  thumbAnim: q('#busy .bar i').animationName, heart: q('#busy .box', '::before').content };
+      hideBusy(); return r;
+    }, pal);
+    const base = await look('default'), barbie = await look('barbie'), neon = await look('neon');
+    assert.equal(base.titleAnim, 'none');
+    assert.equal(base.thumbAnim, 'slide', '預設的進度條動畫不變');
+    assert.equal(barbie.radius, '28px');
+    assert.match(barbie.titleFont, /Brush Script|Segoe Script|cursive/);
+    assert.match(barbie.heart, /💖/);
+    assert.notEqual(neon.titleAnim, 'none');
+    assert.match(neon.thumbAnim, /neon-slide/);
+    assert.notEqual(neon.radius, base.radius);
+  });
+  test('霓虹的處理中遮罩在「減少動態」下停止動畫，進度條改為滿版靜態', async () => {
+    const { page } = await app({ reducedMotion: 'reduce' });
+    const r = await page.evaluate(() => {
+      document.documentElement.dataset.palette = 'neon'; showBusy('x');
+      const bar = document.querySelector('#busy .bar').getBoundingClientRect().width, thumb = document.querySelector('#busy .bar i').getBoundingClientRect().width;
+      const out = { titleAnim: getComputedStyle(document.querySelector('#busy .t')).animationName,
+                    thumbAnim: getComputedStyle(document.querySelector('#busy .bar i')).animationName, full: Math.abs(bar - thumb) < 1 };
+      hideBusy(); return out;
+    });
+    assert.deepEqual(r, { titleAnim: 'none', thumbAnim: 'none', full: true });
+  });
   test('語言切換後，色系選單與提示文字一起換', async () => {
     const { page } = await app({ locale: 'en-US' });
     await page.click('#paletteBtn');

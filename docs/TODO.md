@@ -7,7 +7,7 @@
 ## 待辦
 
 1. 【使用者】可刪除先前為了檢查 github.io 而建立的個人雲端環境 `excel-revdiff-offline`（只多允許 `blex01000001.github.io`）。
-2. 【使用者】到 GitHub Settings → General 打開 "Automatically delete head branches"（必要：這個環境刪不了遠端分支）；並手動刪掉殘留的 `docs/pr-workflow`（PR #1 頁面的 Delete branch）。可選：Branch protection 設 `main` 必須通過 `test` 檢查，擋下 CI 失敗的合併。
+2. 【使用者】到 GitHub Settings → General 打開 "Automatically delete head branches"（必要：這個環境刪不了遠端分支），並刪掉所有已合併的遠端分支（`gh api repos/Blex01000001/Excel-RevDiff-Offline/branches -q '.[].name'` 可列出，`main` 除外）。可選：Branch protection 設 `main` 必須通過 `test` 檢查，擋下 CI 失敗的合併。
 
 ## 已知問題／限制
 
