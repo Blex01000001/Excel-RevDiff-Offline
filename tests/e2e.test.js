@@ -527,7 +527,7 @@ describe('語言與主題', () => {
     const off = await app({ reducedMotion: 'reduce' });
     assert.equal(await off.page.evaluate(() => { document.documentElement.dataset.palette = 'stock'; return getComputedStyle(document.querySelector('header h1'), '::after').animationName; }), 'none');
   });
-  test('股市色系的處理中遮罩：8 根 K 棒依序長出來，淺色往上漲、深色往下跌；減少動態時直接顯示完整 K 線', async () => {
+  test('股市色系的處理中遮罩：8 根 K 棒依序長出來；減少動態時直接顯示完整 K 線', async () => {
     const probe = async (mode, opts) => {
       const { page } = await app(opts);
       await page.evaluate(m => { document.documentElement.dataset.palette = 'stock'; document.documentElement.dataset.theme = m; showBusy('x'); }, mode);
@@ -546,11 +546,36 @@ describe('語言與主題', () => {
       assert.ok(sm.every(x => x.p >= 0 && x.p <= 8), '進度 --p 在 0 到 8 之間');
       assert.ok(new Set(sm.map(x => x.p)).size > 2, '--p 隨時間變化（K 棒一根根長出來）：' + sm.map(x => x.p.toFixed(1)));
     }
-    assert.match(up[0].posY, /calc\(100%/, '淺色（上漲）K 棒貼著底邊往上長');
-    assert.doesNotMatch(down[0].posY, /%/, '深色（下跌）K 棒貼著頂邊往下長');
     assert.match(up[0].icon, /📈/); assert.match(down[0].icon, /📉/);
     const still = await probe('dark', { reducedMotion: 'reduce' });
     assert.ok(still.every(x => x.anim === 'none' && x.p === 8), '減少動態：不動，且 8 根全部顯示');
+  });
+  test('股市色系的 K 線走勢：漲停＝前三根緩跌 1～3%、第 4 根大漲約 10%、之後又緩跌；跌停完全相反；開盤＝前一根收盤', async () => {
+    const { page } = await app();
+    const chart = mode => page.evaluate(m => {
+      document.documentElement.dataset.palette = 'stock'; document.documentElement.dataset.theme = m; showBusy('x');
+      const i = document.querySelector('#busy .bar i'); i.style.animation = 'none'; i.style.setProperty('--p', '8');
+      const cs = getComputedStyle(i), root = getComputedStyle(document.documentElement);
+      const hex = x => [1, 3, 5].map(k => parseInt(x.trim().slice(k, k + 2), 16)).join(',');
+      const up = hex(root.getPropertyValue('--up')), down = hex(root.getPropertyValue('--down'));
+      const cols = [...cs.backgroundImage.matchAll(/linear-gradient\(rgb\((\d+), (\d+), (\d+)\)/g)].map(x => x.slice(1, 4).join(','));
+      const sizes = cs.backgroundSize.split(', ').map(x => parseFloat(x.split(' ')[1]));
+      const posY = cs.backgroundPositionY.split(', ').map(x => parseFloat(x.match(/- ([\d.]+)px/)[1]));
+      hideBusy();
+      return [...Array(8).keys()].map(k => {
+        const dir = cols[2 * k] === up ? 'up' : cols[2 * k] === down ? 'down' : '?', h = sizes[2 * k], yb = posY[2 * k];
+        return { dir, pct: h / 3.4, open: dir === 'up' ? yb : yb + h, close: dir === 'up' ? yb + h : yb };
+      });
+    }, mode);
+    for (const [mode, dirs] of [['light', ['down', 'down', 'down', 'up', 'down', 'down', 'down', 'down']], ['dark', ['up', 'up', 'up', 'down', 'up', 'up', 'up', 'up']]]) {
+      const c = await chart(mode);
+      assert.deepEqual(c.map(x => x.dir), dirs, `${mode} 的漲跌方向`);
+      c.forEach((x, k) => {
+        if (k === 3) assert.ok(x.pct >= 8 && x.pct <= 11, `${mode} 第 4 根約 10%：${x.pct.toFixed(1)}`);
+        else assert.ok(x.pct >= 1 && x.pct <= 3.05, `${mode} 第 ${k + 1} 根緩漲跌 1～3%：${x.pct.toFixed(2)}`);
+      });
+      for (let k = 0; k < 7; k++) assert.ok(Math.abs(c[k].close - c[k + 1].open) <= 0.35, `${mode}：第 ${k + 2} 根的開盤要接在第 ${k + 1} 根的收盤`);
+    }
   });
   test('語言切換後，色系選單與提示文字一起換', async () => {
     const { page } = await app({ locale: 'en-US' });
