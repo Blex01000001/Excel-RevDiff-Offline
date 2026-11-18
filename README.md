@@ -22,7 +22,7 @@ The whole tool is a **single HTML file** — nothing to install, no internet nee
 - **Duplicate Key warnings**: duplicate Keys inside one file are never silently skipped; you get a warning explaining how they were paired.
 - **Filter, search, export**: filter by category, search across all columns, and export a color-coded .xlsx (with a summary sheet).
 - **Handles large files**: tens of thousands of rows are fine.
-- **Interface**: English / 繁體中文 and dark / light themes, switchable with the buttons at the top right; the little arrow next to the theme button hides five silly palettes: Dreamy Barbie, Rainbow Neon, Retro Desktop '95, Bubble Tea and Galaxy.
+- **Interface**: English / 繁體中文 and dark / light themes, switchable with the buttons at the top right; the little arrow next to the theme button hides seven silly palettes: Dreamy Barbie, Rainbow Neon, Retro Desktop '95, Bubble Tea, Galaxy, Lunar New Year, and a stock-market one where light = limit up and dark = limit down.
 
 ### How to use it in 3 steps
 
@@ -56,7 +56,7 @@ The whole tool is a **single HTML file** — nothing to install, no internet nee
 - **重複 Key 警告**：同一個檔案裡有重複的 Key 時不會被默默略過，會提醒你並說明是怎麼配對的。
 - **篩選、搜尋、匯出**：結果可依類別篩選、全欄位搜尋，並匯出成帶顏色的 .xlsx（含摘要）。
 - **大檔案可用**：數萬列的檔案可以順利處理。
-- **介面**：支援繁體中文／English，以及暗色／亮色主題，右上角按鈕即可切換；主題按鈕右邊的小箭頭還藏了五個搞怪的色系：夢幻芭比、七彩霓虹燈、Win95 復古桌面、珍珠奶茶、太空銀河。
+- **介面**：支援繁體中文／English，以及暗色／亮色主題，右上角按鈕即可切換；主題按鈕右邊的小箭頭還藏了七個搞怪的色系：夢幻芭比、七彩霓虹燈、Win95 復古桌面、珍珠奶茶、太空銀河、過年紅包，以及淺色＝漲停、深色＝跌停的股市主題。
 
 ### 三步驟使用
 
