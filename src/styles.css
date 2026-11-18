@@ -2,7 +2,10 @@
    - 顏色只用 CSS 變數；新增變數時暗色（預設）與亮色兩組 :root[data-theme] 都要給值。
    - [hidden]{display:none!important} 不可刪：.finfo 等 display:flex 的元素會蓋掉 hidden 屬性。
    - .card 的 scroll-margin-top 與固定標題列（header，sticky）的高度綁在一起，改其一要一起調。
-   - 不可引用外部資源（字型、圖片、CDN）。 */
+   - 不可引用外部資源（字型、圖片、CDN）。
+   - 主題有兩條互不干擾的軸：模式（data-theme：dark／light）× 色系（data-palette：default／barbie）。
+     新色系只覆寫變數，且暗、亮兩種模式都要各給一組（:root[data-palette="x"][data-theme="dark|light"]）。
+   - 唯一可以寫死色碼的地方：選單裡的色系預覽色塊（.sw-*），因為它預覽的是「別的色系」。 */
 :root,:root[data-theme="dark"]{
   color-scheme:dark;
   --bg:#12161d;--panel:#1b212b;--text:#e6e9ef;--muted:#98a2b3;--line:#323b4a;--accent:#7aa2f7;--accent-soft:#25324d;
@@ -17,7 +20,7 @@
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 "Microsoft JhengHei","PingFang TC","Noto Sans CJK TC",system-ui,sans-serif}
+body{margin:0;background-color:var(--bg);background-image:var(--bg-image,none);background-attachment:fixed;color:var(--text);font:14px/1.5 "Microsoft JhengHei","PingFang TC","Noto Sans CJK TC",system-ui,sans-serif}
 header{position:sticky;top:0;z-index:50;padding:10px 20px;border-bottom:1px solid var(--line);background:var(--panel);display:flex;align-items:center;gap:14px;flex-wrap:wrap;box-shadow:0 1px 6px rgba(0,0,0,.08)}
 header h1{margin:0;font-size:18px}
 header .ver{font-size:12px;font-weight:600;color:var(--accent);border:1px solid var(--accent);border-radius:999px;padding:0 8px;line-height:20px}
@@ -25,8 +28,26 @@ header .sub{color:var(--muted);font-size:12px}
 .langbtn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:999px;padding:5px 12px 5px 9px;font:inherit;font-size:13px;cursor:pointer}
 .langbtn:hover{border-color:var(--accent);color:var(--accent)}
 .langbtn svg{width:18px;height:18px;flex:none}
-.iconbtn{padding:5px 8px}
 :root[data-theme="dark"] .ic-moon,:root:not([data-theme="light"]) .ic-moon,:root[data-theme="light"] .ic-sun{display:none}
+/* 膠囊按鈕：左半邊切換亮／暗，右半邊展開色系選單 */
+.splitbtn{position:relative;display:inline-flex;border:1px solid var(--line);border-radius:999px;background:var(--panel)}
+.splitbtn>button{display:inline-flex;align-items:center;border:0;background:transparent;color:var(--text);font:inherit;cursor:pointer;padding:5px 10px}
+.splitbtn>button:hover{background-image:linear-gradient(var(--hover),var(--hover));color:var(--accent)}
+.splitbtn>button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.splitbtn svg{width:18px;height:18px;flex:none}
+.splitbtn>.sb-main{border-radius:999px 0 0 999px;padding-left:12px}
+.splitbtn>.sb-more{border-radius:0 999px 999px 0;border-left:1px solid var(--line);padding:5px 8px}
+.sb-more svg{width:14px;height:14px;transition:transform .15s}
+.sb-more[aria-expanded="true"] svg{transform:rotate(180deg)}
+.pmenu{position:absolute;top:calc(100% + 8px);right:0;min-width:190px;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.35);padding:6px;z-index:60}
+.pm-title{padding:4px 10px 6px;font-size:12px;color:var(--muted)}
+.pmenu button{display:flex;align-items:center;gap:10px;width:100%;border:0;background:transparent;color:inherit;font:inherit;text-align:left;padding:7px 10px;border-radius:8px;cursor:pointer}
+.pmenu button:hover,.pmenu button:focus-visible{background:var(--accent-soft);outline:none}
+.pmenu .sw{flex:none;width:18px;height:18px;border-radius:50%;border:1px solid var(--line)}
+.sw-default{background:linear-gradient(135deg,#7aa2f7 50%,#2457c5 50%)}
+.sw-barbie{background:linear-gradient(135deg,#ff6ec7 50%,#ffc3e8 50%)}
+.pmenu .ck{margin-left:auto;visibility:hidden;color:var(--accent)}
+.pmenu button[aria-checked="true"] .ck{visibility:visible}
 .card{scroll-margin-top:72px}
 main{padding:16px 20px;max-width:1800px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}
@@ -141,3 +162,27 @@ details.warn>div,details.warn>ul{margin-top:8px}
 th.dth{cursor:pointer;user-select:none;text-align:right}
 th.dth:hover{color:var(--accent)}
 .ph{color:var(--muted);text-align:center;padding:30px}
+
+/* ===== 色系：夢幻芭比（搞怪用，版面與對比不保證好用；暗、亮兩種模式各一組） ===== */
+:root[data-palette="barbie"][data-theme="dark"]{
+  --bg:#2a0a24;--panel:#3b1233;--text:#ffe3f3;--muted:#e9a6cd;--line:#7a2a68;--accent:#ff6ec7;--accent-soft:#5a1b4c;
+  --add:#17493b;--add-t:#9bf6d0;--del:#5c1b2c;--del-t:#ff9db3;--mod:#5e4a18;--mod-t:#ffe9a0;--same-t:#f3c4e0;
+  --old:#ff8fa3;--on-accent:#2a0a24;--hover:rgba(255,160,220,.14);
+  --bg-image:radial-gradient(circle at 12% 8%,rgba(255,105,180,.38),transparent 42%),radial-gradient(circle at 88% 18%,rgba(190,120,255,.32),transparent 44%),radial-gradient(circle at 50% 100%,rgba(255,150,210,.30),transparent 52%);
+}
+:root[data-palette="barbie"][data-theme="light"]{
+  --bg:#ffd6ec;--panel:#fff0f8;--text:#7a1250;--muted:#b24c86;--line:#ff9ccf;--accent:#ff2e93;--accent-soft:#ffd0e8;
+  --add:#c4f5e0;--add-t:#0b6b49;--del:#ffc4c4;--del-t:#b0102a;--mod:#fff0a6;--mod-t:#7a5200;--same-t:#a23d78;
+  --old:#d10f46;--on-accent:#fff;--hover:rgba(255,46,147,.10);
+  --bg-image:radial-gradient(circle at 10% 8%,#fff 0,transparent 34%),linear-gradient(135deg,#ffc3e3 0%,#ffe1f2 45%,#e9c9ff 100%);
+}
+:root[data-palette="barbie"]{scrollbar-color:#ff6ec7 transparent}
+:root[data-palette="barbie"] ::selection{background:#ff6ec7;color:#fff}
+:root[data-palette="barbie"] input[type="checkbox"]{accent-color:#ff2e93}
+:root[data-palette="barbie"] header{background-image:linear-gradient(90deg,var(--panel),var(--accent-soft),var(--panel))}
+:root[data-palette="barbie"] header h1{font-family:"Brush Script MT","Segoe Script","Snell Roundhand","Comic Sans MS",cursive;font-size:26px;background:linear-gradient(90deg,#ff2e93,#c77dff,#ff6ec7);-webkit-background-clip:text;background-clip:text;color:transparent}
+:root[data-palette="barbie"] .card{border:2px solid var(--line);border-top:5px solid var(--accent);border-radius:26px;box-shadow:0 10px 32px rgba(255,46,147,.30)}
+:root[data-palette="barbie"] .card h2::after{content:"✨";margin-left:auto}
+:root[data-palette="barbie"] .card h2 .step{box-shadow:0 0 0 5px var(--accent-soft)}
+:root[data-palette="barbie"] .stat{border-radius:22px}
+:root[data-palette="barbie"] button.primary{border-radius:999px;background-image:linear-gradient(90deg,#ff2e93,#ff77c8);color:#fff}

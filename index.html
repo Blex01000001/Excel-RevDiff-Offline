@@ -5,13 +5,16 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Excel RevDiff Offline</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232457c5'/%3E%3Crect x='6' y='7' width='20' height='4.5' rx='2' fill='%234ade80'/%3E%3Crect x='6' y='13.75' width='20' height='4.5' rx='2' fill='%23facc15'/%3E%3Crect x='6' y='20.5' width='20' height='4.5' rx='2' fill='%23f87171'/%3E%3C/svg%3E">
-<script>(function(){var th='dark';try{var v=localStorage.getItem('revdiff-theme');if(v==='light'||v==='dark')th=v;}catch(e){}document.documentElement.setAttribute('data-theme',th);})();</script>
+<script>/* 白名單要與 js/main.js 的 PALETTES 一致 */(function(){var th='dark',pl='default';try{var v=localStorage.getItem('revdiff-theme');if(v==='light'||v==='dark')th=v;var p=localStorage.getItem('revdiff-palette');if(p==='default'||p==='barbie')pl=p;}catch(e){}var r=document.documentElement;r.setAttribute('data-theme',th);r.setAttribute('data-palette',pl);})();</script>
 <style>
 /* 【樣式規則】
    - 顏色只用 CSS 變數；新增變數時暗色（預設）與亮色兩組 :root[data-theme] 都要給值。
    - [hidden]{display:none!important} 不可刪：.finfo 等 display:flex 的元素會蓋掉 hidden 屬性。
    - .card 的 scroll-margin-top 與固定標題列（header，sticky）的高度綁在一起，改其一要一起調。
-   - 不可引用外部資源（字型、圖片、CDN）。 */
+   - 不可引用外部資源（字型、圖片、CDN）。
+   - 主題有兩條互不干擾的軸：模式（data-theme：dark／light）× 色系（data-palette：default／barbie）。
+     新色系只覆寫變數，且暗、亮兩種模式都要各給一組（:root[data-palette="x"][data-theme="dark|light"]）。
+   - 唯一可以寫死色碼的地方：選單裡的色系預覽色塊（.sw-*），因為它預覽的是「別的色系」。 */
 :root,:root[data-theme="dark"]{
   color-scheme:dark;
   --bg:#12161d;--panel:#1b212b;--text:#e6e9ef;--muted:#98a2b3;--line:#323b4a;--accent:#7aa2f7;--accent-soft:#25324d;
@@ -26,7 +29,7 @@
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 "Microsoft JhengHei","PingFang TC","Noto Sans CJK TC",system-ui,sans-serif}
+body{margin:0;background-color:var(--bg);background-image:var(--bg-image,none);background-attachment:fixed;color:var(--text);font:14px/1.5 "Microsoft JhengHei","PingFang TC","Noto Sans CJK TC",system-ui,sans-serif}
 header{position:sticky;top:0;z-index:50;padding:10px 20px;border-bottom:1px solid var(--line);background:var(--panel);display:flex;align-items:center;gap:14px;flex-wrap:wrap;box-shadow:0 1px 6px rgba(0,0,0,.08)}
 header h1{margin:0;font-size:18px}
 header .ver{font-size:12px;font-weight:600;color:var(--accent);border:1px solid var(--accent);border-radius:999px;padding:0 8px;line-height:20px}
@@ -34,8 +37,26 @@ header .sub{color:var(--muted);font-size:12px}
 .langbtn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:999px;padding:5px 12px 5px 9px;font:inherit;font-size:13px;cursor:pointer}
 .langbtn:hover{border-color:var(--accent);color:var(--accent)}
 .langbtn svg{width:18px;height:18px;flex:none}
-.iconbtn{padding:5px 8px}
 :root[data-theme="dark"] .ic-moon,:root:not([data-theme="light"]) .ic-moon,:root[data-theme="light"] .ic-sun{display:none}
+/* 膠囊按鈕：左半邊切換亮／暗，右半邊展開色系選單 */
+.splitbtn{position:relative;display:inline-flex;border:1px solid var(--line);border-radius:999px;background:var(--panel)}
+.splitbtn>button{display:inline-flex;align-items:center;border:0;background:transparent;color:var(--text);font:inherit;cursor:pointer;padding:5px 10px}
+.splitbtn>button:hover{background-image:linear-gradient(var(--hover),var(--hover));color:var(--accent)}
+.splitbtn>button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.splitbtn svg{width:18px;height:18px;flex:none}
+.splitbtn>.sb-main{border-radius:999px 0 0 999px;padding-left:12px}
+.splitbtn>.sb-more{border-radius:0 999px 999px 0;border-left:1px solid var(--line);padding:5px 8px}
+.sb-more svg{width:14px;height:14px;transition:transform .15s}
+.sb-more[aria-expanded="true"] svg{transform:rotate(180deg)}
+.pmenu{position:absolute;top:calc(100% + 8px);right:0;min-width:190px;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.35);padding:6px;z-index:60}
+.pm-title{padding:4px 10px 6px;font-size:12px;color:var(--muted)}
+.pmenu button{display:flex;align-items:center;gap:10px;width:100%;border:0;background:transparent;color:inherit;font:inherit;text-align:left;padding:7px 10px;border-radius:8px;cursor:pointer}
+.pmenu button:hover,.pmenu button:focus-visible{background:var(--accent-soft);outline:none}
+.pmenu .sw{flex:none;width:18px;height:18px;border-radius:50%;border:1px solid var(--line)}
+.sw-default{background:linear-gradient(135deg,#7aa2f7 50%,#2457c5 50%)}
+.sw-barbie{background:linear-gradient(135deg,#ff6ec7 50%,#ffc3e8 50%)}
+.pmenu .ck{margin-left:auto;visibility:hidden;color:var(--accent)}
+.pmenu button[aria-checked="true"] .ck{visibility:visible}
 .card{scroll-margin-top:72px}
 main{padding:16px 20px;max-width:1800px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}
@@ -150,12 +171,40 @@ details.warn>div,details.warn>ul{margin-top:8px}
 th.dth{cursor:pointer;user-select:none;text-align:right}
 th.dth:hover{color:var(--accent)}
 .ph{color:var(--muted);text-align:center;padding:30px}
+
+/* ===== 色系：夢幻芭比（搞怪用，版面與對比不保證好用；暗、亮兩種模式各一組） ===== */
+:root[data-palette="barbie"][data-theme="dark"]{
+  --bg:#2a0a24;--panel:#3b1233;--text:#ffe3f3;--muted:#e9a6cd;--line:#7a2a68;--accent:#ff6ec7;--accent-soft:#5a1b4c;
+  --add:#17493b;--add-t:#9bf6d0;--del:#5c1b2c;--del-t:#ff9db3;--mod:#5e4a18;--mod-t:#ffe9a0;--same-t:#f3c4e0;
+  --old:#ff8fa3;--on-accent:#2a0a24;--hover:rgba(255,160,220,.14);
+  --bg-image:radial-gradient(circle at 12% 8%,rgba(255,105,180,.38),transparent 42%),radial-gradient(circle at 88% 18%,rgba(190,120,255,.32),transparent 44%),radial-gradient(circle at 50% 100%,rgba(255,150,210,.30),transparent 52%);
+}
+:root[data-palette="barbie"][data-theme="light"]{
+  --bg:#ffd6ec;--panel:#fff0f8;--text:#7a1250;--muted:#b24c86;--line:#ff9ccf;--accent:#ff2e93;--accent-soft:#ffd0e8;
+  --add:#c4f5e0;--add-t:#0b6b49;--del:#ffc4c4;--del-t:#b0102a;--mod:#fff0a6;--mod-t:#7a5200;--same-t:#a23d78;
+  --old:#d10f46;--on-accent:#fff;--hover:rgba(255,46,147,.10);
+  --bg-image:radial-gradient(circle at 10% 8%,#fff 0,transparent 34%),linear-gradient(135deg,#ffc3e3 0%,#ffe1f2 45%,#e9c9ff 100%);
+}
+:root[data-palette="barbie"]{scrollbar-color:#ff6ec7 transparent}
+:root[data-palette="barbie"] ::selection{background:#ff6ec7;color:#fff}
+:root[data-palette="barbie"] input[type="checkbox"]{accent-color:#ff2e93}
+:root[data-palette="barbie"] header{background-image:linear-gradient(90deg,var(--panel),var(--accent-soft),var(--panel))}
+:root[data-palette="barbie"] header h1{font-family:"Brush Script MT","Segoe Script","Snell Roundhand","Comic Sans MS",cursive;font-size:26px;background:linear-gradient(90deg,#ff2e93,#c77dff,#ff6ec7);-webkit-background-clip:text;background-clip:text;color:transparent}
+:root[data-palette="barbie"] .card{border:2px solid var(--line);border-top:5px solid var(--accent);border-radius:26px;box-shadow:0 10px 32px rgba(255,46,147,.30)}
+:root[data-palette="barbie"] .card h2::after{content:"✨";margin-left:auto}
+:root[data-palette="barbie"] .card h2 .step{box-shadow:0 0 0 5px var(--accent-soft)}
+:root[data-palette="barbie"] .stat{border-radius:22px}
+:root[data-palette="barbie"] button.primary{border-radius:999px;background-image:linear-gradient(90deg,#ff2e93,#ff77c8);color:#fff}
 </style>
 </head>
 <body>
 <header><h1>Excel RevDiff Offline</h1><span class="ver" title="Version">v1.1.0</span><span class="sub" data-i18n="subtitle"></span><span class="sp"></span>
   <button class="langbtn" id="langBtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M2.5 12h19M12 2.5c2.6 2.7 3.9 5.9 3.9 9.5s-1.3 6.8-3.9 9.5c-2.6-2.7-3.9-5.9-3.9-9.5S9.4 5.2 12 2.5z"/></svg><span id="langCode"></span></button>
-  <button class="langbtn iconbtn" id="themeBtn" type="button"><svg class="ic-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2.5M12 19.5V22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M2 12h2.5M19.5 12H22M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg><svg class="ic-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button></header>
+  <div class="splitbtn" id="themeSplit" role="group">
+    <button class="sb-main" id="themeBtn" type="button"><svg class="ic-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2.5M12 19.5V22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M2 12h2.5M19.5 12H22M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg><svg class="ic-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+    <button class="sb-more" id="paletteBtn" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="paletteMenu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+    <div class="pmenu" id="paletteMenu" role="menu" hidden></div>
+  </div></header>
 <main>
   <section class="card">
     <h2><span class="step">1</span><span data-i18n="s1"></span></h2>
@@ -260,7 +309,7 @@ zh:{
   optHideEmpty:'隱藏全空欄位', optOnlyDiff:'只顯示 Key 與有差異的欄位',
   dTitle:'數量差值', phQ:'搜尋任何欄位（可用空白分隔多個關鍵字）', expFiltered:'僅匯出目前篩選結果', btnExport:'匯出 .xlsx',
   busyDefault:'處理中…', busyNote:'檔案較大時需要幾秒到數十秒，請稍候', elapsed:n=>`已經過 ${n} 秒`, errCompare:'比對失敗：{0}',
-  langTo:'EN', langTip:'Switch to English', themeToLight:'切換為亮色主題', themeToDark:'切換為暗色主題',
+  langTo:'EN', langTip:'Switch to English', themeToLight:'切換為亮色主題', themeToDark:'切換為暗色主題', palTitle:'色系', palTip:'選擇色系', pal_default:'預設', pal_barbie:'夢幻芭比',
   revA:'Rev A（舊版）', revB:'Rev B（新版）',
   dropHint:'點擊選擇檔案，或把 Excel 檔拖曳到這裡', dropFmt:'支援 .xlsx .xlsm .xlsb .xls .ods .csv',
   sheetLbl:'工作表', hrPre:'標題列在第', hrPost:'列',
@@ -316,7 +365,7 @@ en:{
   optHideEmpty:'Hide empty columns', optOnlyDiff:'Show only Key and changed columns',
   dTitle:'Quantity delta', phQ:'Search any column (space-separated keywords)', expFiltered:'Export current filter only', btnExport:'Export .xlsx',
   busyDefault:'Processing…', busyNote:'Large files can take several seconds up to a minute. Please wait.', elapsed:n=>`Elapsed: ${n} s`, errCompare:'Comparison failed: {0}',
-  langTo:'中文', langTip:'切換為中文', themeToLight:'Switch to light theme', themeToDark:'Switch to dark theme',
+  langTo:'中文', langTip:'切換為中文', themeToLight:'Switch to light theme', themeToDark:'Switch to dark theme', palTitle:'Palette', palTip:'Choose a palette', pal_default:'Default', pal_barbie:'Dreamy Barbie',
   revA:'Rev A (old)', revB:'Rev B (new)',
   dropHint:'Click to choose a file, or drag an Excel file here', dropFmt:'Supports .xlsx .xlsm .xlsb .xls .ods .csv',
   sheetLbl:'Sheet', hrPre:'Header row', hrPost:'',
@@ -1261,7 +1310,9 @@ $('#btnExport').addEventListener('click', exportXlsx);
 
 /* ================= 主題切換（預設暗色） ================= */
 /* 【本檔】主題與語言切換、啟動
-   - 預設暗色主題、不跟隨作業系統；語言預設跟隨瀏覽器；兩者都用 localStorage 記住（讀寫一律 try/catch）。
+   - 預設暗色主題、不跟隨作業系統；語言預設跟隨瀏覽器；都用 localStorage 記住（讀寫一律 try/catch）。
+   - 主題 ＝ 模式（亮／暗）× 色系（PALETTES）。膠囊按鈕左半邊（#themeBtn）永遠只切亮暗、不管色系；右半邊（#paletteBtn）展開色系選單。
+   - 新增色系：加進 PALETTES、i18n 的 pal_<id>、styles.css 的色系區塊與 .sw-<id>，並把 template.html <head> 的白名單一起改。
    - 這必須是頁面最後一段程式：測試以「最後一個 script 標籤」做語法檢查，template.html 在它後面不要再加別的 script 標籤。
    - js/ 與 styles.css 的內容（含註解）不可出現字面上的 script 開始或結束標籤，會干擾 HTML 解析與上述檢查。 */
 function curTheme(){ return document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark'; }
@@ -1276,13 +1327,55 @@ $('#themeBtn').addEventListener('click', () => {
   updateThemeBtn();
 });
 
+/* ----- 色系（膠囊按鈕右半邊的選單） ----- */
+const PALETTES = ['default', 'barbie'];   // template.html <head> 的防閃爍腳本有同一份白名單
+function curPalette(){ const p = document.documentElement.getAttribute('data-palette'); return PALETTES.includes(p) ? p : 'default'; }
+function renderPaletteMenu(){
+  const cur = curPalette();
+  $('#paletteMenu').innerHTML = `<div class="pm-title">${esc(t('palTitle'))}</div>` + PALETTES.map(id =>
+    `<button type="button" role="menuitemradio" aria-checked="${id === cur}" data-p="${id}"><span class="sw sw-${id}"></span><span>${esc(t('pal_' + id))}</span><span class="ck" aria-hidden="true">✓</span></button>`).join('');
+  $('#paletteBtn').title = t('palTip'); $('#paletteBtn').setAttribute('aria-label', t('palTip'));
+}
+const menuItems = () => [...$('#paletteMenu').querySelectorAll('button')];
+function openPaletteMenu(){
+  $('#paletteMenu').hidden = false; $('#paletteBtn').setAttribute('aria-expanded', 'true');
+  (menuItems().find(b => b.getAttribute('aria-checked') === 'true') || menuItems()[0]).focus();
+}
+function closePaletteMenu(refocus){
+  if ($('#paletteMenu').hidden) return;
+  $('#paletteMenu').hidden = true; $('#paletteBtn').setAttribute('aria-expanded', 'false');
+  if (refocus) $('#paletteBtn').focus();
+}
+function setPalette(id){
+  if (!PALETTES.includes(id)) return;
+  document.documentElement.setAttribute('data-palette', id);
+  try{ localStorage.setItem('revdiff-palette', id); }catch(e){}
+  renderPaletteMenu();
+}
+$('#paletteBtn').addEventListener('click', () => { $('#paletteMenu').hidden ? openPaletteMenu() : closePaletteMenu(true); });
+$('#paletteMenu').addEventListener('click', e => {
+  const b = e.target.closest('button[data-p]'); if (!b) return;
+  setPalette(b.dataset.p); closePaletteMenu(true);
+});
+document.addEventListener('click', e => { if (!e.target.closest('#themeSplit')) closePaletteMenu(false); });
+$('#themeSplit').addEventListener('keydown', e => {
+  const open = !$('#paletteMenu').hidden;
+  if (e.key === 'Escape' && open){ e.preventDefault(); closePaletteMenu(true); return; }
+  if (e.key === 'ArrowDown' && !open && e.target === $('#paletteBtn')){ e.preventDefault(); openPaletteMenu(); return; }
+  if (!open || !e.target.closest('#paletteMenu')) return;
+  const items = menuItems(), i = items.indexOf(document.activeElement);
+  const to = e.key === 'ArrowDown' ? (i + 1) % items.length : e.key === 'ArrowUp' ? (i - 1 + items.length) % items.length
+           : e.key === 'Home' ? 0 : e.key === 'End' ? items.length - 1 : -1;
+  if (to >= 0){ e.preventDefault(); items[to].focus(); }
+});
+
 /* ================= 語言切換 ================= */
 function applyLang(){
   document.documentElement.lang = lang === 'zh' ? 'zh-Hant' : 'en';
   document.querySelectorAll('[data-i18n]').forEach(el => { el.innerHTML = t(el.dataset.i18n); });
   document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
   document.querySelectorAll('[data-i18n-title]').forEach(el => { el.title = t(el.dataset.i18nTitle); });
-  updateThemeBtn();
+  updateThemeBtn(); renderPaletteMenu();
   $('#langCode').textContent = t('langTo'); $('#langBtn').title = t('langTip'); $('#langBtn').setAttribute('aria-label', t('langTip'));
   if ($('#busy').hidden) $('#busyT').textContent = t('busyDefault');
   renderMsg();

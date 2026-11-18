@@ -239,6 +239,73 @@ describe('語言與主題', () => {
     await again.goto(H.APP_URL);
     assert.equal(await theme(again), 'light', '選擇會被記住');
   });
+  test('色系選單：列出兩個色系並標出目前的；選了立刻套用、記住；左半邊仍只切亮暗', async () => {
+    const { ctx, page } = await app();
+    const attrs = p => p.evaluate(() => ({ theme: document.documentElement.dataset.theme, palette: document.documentElement.dataset.palette }));
+    assert.deepEqual(await attrs(page), { theme: 'dark', palette: 'default' });
+    assert.equal(await page.locator('#paletteMenu').isHidden(), true);
+    await page.click('#paletteBtn');
+    assert.equal(await page.getAttribute('#paletteBtn', 'aria-expanded'), 'true');
+    assert.deepEqual(await page.$$eval('#paletteMenu [role="menuitemradio"]', b => b.map(x => [x.dataset.p, x.getAttribute('aria-checked')])), [['default', 'true'], ['barbie', 'false']]);
+    const before = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+    await page.click('#paletteMenu [data-p="barbie"]');
+    assert.deepEqual(await attrs(page), { theme: 'dark', palette: 'barbie' });
+    assert.notEqual(await page.evaluate(() => getComputedStyle(document.body).backgroundColor), before);
+    assert.equal(await page.locator('#paletteMenu').isHidden(), true, '選了就關閉');
+    await page.click('#themeBtn');
+    assert.deepEqual(await attrs(page), { theme: 'light', palette: 'barbie' }, '左半邊只切亮暗，色系不變');
+    const again = await ctx.newPage();
+    await again.goto(H.APP_URL);
+    assert.deepEqual(await attrs(again), { theme: 'light', palette: 'barbie' }, '兩個選擇都會被記住');
+  });
+  test('色系選單：Esc 與點選單外面都會關閉；方向鍵可操作', async () => {
+    const { page } = await app();
+    await page.click('#paletteBtn');
+    await page.keyboard.press('Escape');
+    assert.equal(await page.locator('#paletteMenu').isHidden(), true);
+    assert.equal(await page.evaluate(() => document.activeElement.id), 'paletteBtn', 'Esc 後焦點回到按鈕');
+    await page.click('#paletteBtn');
+    await page.mouse.click(5, 400);
+    assert.equal(await page.locator('#paletteMenu').isHidden(), true, '點外面關閉');
+    await page.focus('#paletteBtn');
+    await page.keyboard.press('ArrowDown');
+    assert.equal(await page.locator('#paletteMenu').isHidden(), false, '方向鍵下可開啟');
+    assert.equal(await page.evaluate(() => document.activeElement.dataset.p), 'default', '焦點落在目前的色系');
+    await page.keyboard.press('ArrowDown');
+    assert.equal(await page.evaluate(() => document.activeElement.dataset.p), 'barbie');
+    await page.keyboard.press('Enter');
+    assert.equal(await page.evaluate(() => document.documentElement.dataset.palette), 'barbie');
+    assert.equal(await page.locator('#paletteMenu').isHidden(), true);
+  });
+  test('儲存的主題或色系無效時退回暗色與預設', async () => {
+    const { page } = await app();
+    await page.evaluate(() => { localStorage.setItem('revdiff-theme', 'neon'); localStorage.setItem('revdiff-palette', 'nope'); });
+    await page.reload();
+    assert.deepEqual(await page.evaluate(() => [document.documentElement.dataset.theme, document.documentElement.dataset.palette]), ['dark', 'default']);
+  });
+  test('每個色系在亮、暗兩種模式下，新增／刪除／修改的底色都彼此不同', async () => {
+    const { page } = await app();
+    for (const palette of ['default', 'barbie']) {
+      for (const theme of ['dark', 'light']) {
+        const v = await page.evaluate(([p, t]) => {
+          const r = document.documentElement; r.dataset.palette = p; r.dataset.theme = t;
+          const g = n => getComputedStyle(r).getPropertyValue(n).trim();
+          return [g('--add'), g('--del'), g('--mod'), g('--panel')];
+        }, [palette, theme]);
+        assert.equal(new Set(v).size, 4, `${palette}/${theme}：${v.join(' ')}`);
+      }
+    }
+  });
+  test('語言切換後，色系選單與提示文字一起換', async () => {
+    const { page } = await app({ locale: 'en-US' });
+    await page.click('#paletteBtn');
+    assert.match(await page.locator('#paletteMenu').innerText(), /Dreamy Barbie/);
+    await page.keyboard.press('Escape');
+    await page.click('#langBtn');
+    await page.click('#paletteBtn');
+    assert.match(await page.locator('#paletteMenu').innerText(), /夢幻芭比/);
+    assert.equal(await page.getAttribute('#paletteBtn', 'title'), '選擇色系');
+  });
   test('標題列捲動時固定在最上方', async () => {
     const { page } = await app();
     await H.compareDemo(page);
