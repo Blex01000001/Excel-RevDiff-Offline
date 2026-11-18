@@ -94,7 +94,7 @@
 4. **等 CI**：`gh run list --repo REPO --branch <分支> --limit 1` 看到成功才合併；失敗就在同一分支修正再推。
 5. **合併**：使用者說「合併」或「合併到 main」時，用 **Rebase and merge**：
    `gh api -X PUT repos/REPO/pulls/<N>/merge -f merge_method=rebase -f sha=<PR 最新的完整 40 字元 SHA>`。不要用 squash（會壓掉每個獨立修改的 commit），也不要用 merge commit。
-6. **合併後**：刪遠端分支 `gh api -X DELETE repos/REPO/git/refs/heads/<分支>`；本機 `git checkout main && git pull --ff-only origin main && git branch -D <分支>`。下一個工作再從最新 `main` 開新分支，不要重用舊分支。
+6. **合併後**：本機 `git checkout main && git pull --ff-only origin main && git branch -D <分支>`。**這個環境刪不掉遠端分支**（`DELETE git/refs` 回 403、`git push --delete` 失敗，不要重試）：靠 GitHub 的「合併後自動刪除分支」設定，或請使用者手動刪。下一個工作再從最新 `main` 開新分支，不要重用舊分支。
 7. **推送被拒絕**：代表 `main` 或該分支在 GitHub 上有新的修改；`git fetch origin && git rebase origin/main` 後以 `--force-with-lease` 推回自己的分支（只限自己的分支，絕不對 `main`）。
 8. `gh` 的 GraphQL 不可用（`gh pr list`／`gh pr create` 會 403）；查 PR 用 `gh api repos/REPO/pulls?state=open`。
 9. 需要了解過去的修改時，用 `git log --oneline`。
