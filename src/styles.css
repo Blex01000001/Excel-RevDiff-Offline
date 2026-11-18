@@ -5,6 +5,8 @@
    - 不可引用外部資源（字型、圖片、CDN）。
    - 主題有兩條互不干擾的軸：模式（data-theme：dark／light）× 色系（data-palette：default／barbie）。
      新色系只覆寫變數，且暗、亮兩種模式都要各給一組（:root[data-palette="x"][data-theme="dark|light"]）。
+   - 色系可以連字體、裝飾、動畫一起換（芭比的手寫標題、霓虹的發光彩虹標題），但只改外觀：不可隱藏或移動功能。
+     動畫要慢（一輪 ≥ 6 秒）、避免閃爍，並用 @media (prefers-reduced-motion: reduce) 關掉。
    - 唯一可以寫死色碼的地方：選單裡的色系預覽色塊（.sw-*），因為它預覽的是「別的色系」。 */
 :root,:root[data-theme="dark"]{
   color-scheme:dark;
@@ -46,6 +48,7 @@ header .sub{color:var(--muted);font-size:12px}
 .pmenu .sw{flex:none;width:18px;height:18px;border-radius:50%;border:1px solid var(--line)}
 .sw-default{background:linear-gradient(135deg,#7aa2f7 50%,#2457c5 50%)}
 .sw-barbie{background:linear-gradient(135deg,#ff6ec7 50%,#ffc3e8 50%)}
+.sw-neon{background:conic-gradient(#ff004d,#ffae00,#37ff00,#00f0ff,#b400ff,#ff00e6,#ff004d)}
 .pmenu .ck{margin-left:auto;visibility:hidden;color:var(--accent)}
 .pmenu button[aria-checked="true"] .ck{visibility:visible}
 .card{scroll-margin-top:72px}
@@ -182,7 +185,40 @@ th.dth:hover{color:var(--accent)}
 :root[data-palette="barbie"] header{background-image:linear-gradient(90deg,var(--panel),var(--accent-soft),var(--panel))}
 :root[data-palette="barbie"] header h1{font-family:"Brush Script MT","Segoe Script","Snell Roundhand","Comic Sans MS",cursive;font-size:26px;background:linear-gradient(90deg,#ff2e93,#c77dff,#ff6ec7);-webkit-background-clip:text;background-clip:text;color:transparent}
 :root[data-palette="barbie"] .card{border:2px solid var(--line);border-top:5px solid var(--accent);border-radius:26px;box-shadow:0 10px 32px rgba(255,46,147,.30)}
+:root[data-palette="barbie"] .card h2{font-family:"Brush Script MT","Segoe Script","Snell Roundhand","Comic Sans MS",cursive;font-size:22px}
 :root[data-palette="barbie"] .card h2::after{content:"✨";margin-left:auto}
 :root[data-palette="barbie"] .card h2 .step{box-shadow:0 0 0 5px var(--accent-soft)}
 :root[data-palette="barbie"] .stat{border-radius:22px}
 :root[data-palette="barbie"] button.primary{border-radius:999px;background-image:linear-gradient(90deg,#ff2e93,#ff77c8);color:#fff}
+
+/* ===== 色系：七彩霓虹燈（暗、亮各一組；有緩慢的彩虹動畫，尊重 prefers-reduced-motion） ===== */
+:root[data-palette="neon"][data-theme="dark"]{
+  --bg:#06060f;--panel:#0e1022;--text:#e9eeff;--muted:#8f9ad6;--line:#2c3270;--accent:#00f0ff;--accent-soft:#0f2a44;
+  --add:#06351f;--add-t:#5dffb0;--del:#40081f;--del-t:#ff6fa5;--mod:#3a3000;--mod-t:#fff35c;--same-t:#b9c3ff;
+  --old:#ff6f91;--on-accent:#00131a;--hover:rgba(0,240,255,.12);--glow:rgba(0,240,255,.55);
+  --rainbow:linear-gradient(90deg,#ff004d,#ff9f00,#ffee00,#37ff00,#00f0ff,#7a5cff,#ff00e6,#ff004d);
+  --bg-image:radial-gradient(circle at 8% 6%,rgba(255,0,200,.22),transparent 38%),radial-gradient(circle at 92% 14%,rgba(0,240,255,.20),transparent 40%),radial-gradient(circle at 50% 104%,rgba(120,255,0,.14),transparent 46%);
+}
+:root[data-palette="neon"][data-theme="light"]{
+  --bg:#f1eeff;--panel:#fff;--text:#1b1340;--muted:#5b4fa3;--line:#c8b9ff;--accent:#e6008c;--accent-soft:#ffe0f3;
+  --add:#c9ffe3;--add-t:#006b45;--del:#ffd3e8;--del-t:#a8003f;--mod:#fff3a8;--mod-t:#6b5200;--same-t:#4a3f8f;
+  --old:#c4003a;--on-accent:#fff;--hover:rgba(230,0,140,.08);--glow:rgba(230,0,140,.30);
+  --rainbow:linear-gradient(90deg,#d6003a,#d97200,#a89600,#009a35,#0086b8,#5638dc,#c000b0,#d6003a);   /* 白底上要夠深，標題與按鈕才讀得到 */
+  --bg-image:radial-gradient(circle at 8% 6%,rgba(255,0,200,.16),transparent 38%),radial-gradient(circle at 92% 14%,rgba(0,200,255,.16),transparent 40%),radial-gradient(circle at 50% 104%,rgba(140,255,0,.14),transparent 46%);
+}
+:root[data-palette="neon"]{scrollbar-color:#00f0ff transparent}
+@keyframes neon-slide{to{background-position:300% 0}}
+@keyframes neon-hue{to{filter:hue-rotate(360deg)}}
+:root[data-palette="neon"] ::selection{background:#00f0ff;color:#001018}
+:root[data-palette="neon"] input[type="checkbox"]{accent-color:#00f0ff}
+:root[data-palette="neon"] header{border-bottom:2px solid transparent;border-image:var(--rainbow) 1;box-shadow:0 4px 24px var(--glow)}
+:root[data-palette="neon"] header h1{font-family:"Bahnschrift","Agency FB","Futura","Century Gothic","Trebuchet MS",sans-serif;font-size:22px;letter-spacing:.14em;text-transform:uppercase;background:var(--rainbow);background-size:300% 100%;background-repeat:repeat-x;-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 7px var(--glow));animation:neon-slide 8s linear infinite}
+:root[data-palette="neon"] header .ver{box-shadow:0 0 10px var(--glow);text-shadow:0 0 6px var(--glow)}
+:root[data-palette="neon"] .splitbtn{box-shadow:0 0 10px var(--glow)}
+:root[data-palette="neon"] .card{position:relative;border:1px solid var(--line);border-top:3px solid var(--accent);box-shadow:0 0 22px var(--glow),0 0 2px var(--accent)}
+:root[data-palette="neon"] .card::before{content:"";position:absolute;left:-1px;right:-1px;top:-3px;height:3px;border-radius:10px 10px 0 0;background:var(--rainbow);background-size:300% 100%;background-repeat:repeat-x;animation:neon-slide 9s linear infinite}
+:root[data-palette="neon"] .card h2{font-family:"Bahnschrift","Agency FB","Futura","Century Gothic","Trebuchet MS",sans-serif;letter-spacing:.06em;text-shadow:0 0 10px var(--glow)}
+:root[data-palette="neon"] .card h2 .step{background:linear-gradient(135deg,#ff004d,#ffae00,#37ff00,#00f0ff,#b400ff);color:#fff;box-shadow:0 0 12px var(--glow);animation:neon-hue 7s linear infinite}
+:root[data-palette="neon"] .stat .n{text-shadow:0 0 14px currentColor}
+:root[data-palette="neon"] button.primary{background:var(--rainbow);background-size:300% 100%;background-repeat:repeat-x;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.65);box-shadow:0 0 14px var(--glow);animation:neon-slide 8s linear infinite}
+@media (prefers-reduced-motion:reduce){:root[data-palette="neon"] *,:root[data-palette="neon"] *::before{animation:none!important}}

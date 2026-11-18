@@ -81,9 +81,9 @@ function tmpDir() { return fs.mkdtempSync(path.join(os.tmpdir(), 'revdiff-')); }
 
 /* ---------- 瀏覽器 ---------- */
 async function launch() { return chromium.launch(); }
-/* opts: locale、colorScheme、noWorker（Worker 一建立就丟錯）、brokenWorker（建立成功但啟動即出錯） */
+/* opts: locale、colorScheme、reducedMotion（'reduce'）、noWorker（Worker 一建立就丟錯）、brokenWorker（建立成功但啟動即出錯） */
 async function openApp(browser, opts = {}) {
-  const ctx = await browser.newContext({ locale: opts.locale || 'en-US', colorScheme: opts.colorScheme || 'dark', viewport: { width: 1300, height: 800 }, acceptDownloads: true });
+  const ctx = await browser.newContext({ locale: opts.locale || 'en-US', colorScheme: opts.colorScheme || 'dark', reducedMotion: opts.reducedMotion || 'no-preference', viewport: { width: 1300, height: 800 }, acceptDownloads: true });
   if (opts.noWorker) await ctx.addInitScript(() => { window.Worker = function () { throw new Error('no worker'); }; });
   if (opts.brokenWorker) await ctx.addInitScript(() => { const W = window.Worker; window.Worker = function () { return new W('data:text/javascript,throw new Error("boom")'); }; });
   ctx.setDefaultTimeout(30000);   // 失敗時盡快回報，不要卡住整個測試

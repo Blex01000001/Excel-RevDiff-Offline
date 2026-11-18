@@ -239,14 +239,14 @@ describe('語言與主題', () => {
     await again.goto(H.APP_URL);
     assert.equal(await theme(again), 'light', '選擇會被記住');
   });
-  test('色系選單：列出兩個色系並標出目前的；選了立刻套用、記住；左半邊仍只切亮暗', async () => {
+  test('色系選單：列出所有色系並標出目前的；選了立刻套用、記住；左半邊仍只切亮暗', async () => {
     const { ctx, page } = await app();
     const attrs = p => p.evaluate(() => ({ theme: document.documentElement.dataset.theme, palette: document.documentElement.dataset.palette }));
     assert.deepEqual(await attrs(page), { theme: 'dark', palette: 'default' });
     assert.equal(await page.locator('#paletteMenu').isHidden(), true);
     await page.click('#paletteBtn');
     assert.equal(await page.getAttribute('#paletteBtn', 'aria-expanded'), 'true');
-    assert.deepEqual(await page.$$eval('#paletteMenu [role="menuitemradio"]', b => b.map(x => [x.dataset.p, x.getAttribute('aria-checked')])), [['default', 'true'], ['barbie', 'false']]);
+    assert.deepEqual(await page.$$eval('#paletteMenu [role="menuitemradio"]', b => b.map(x => [x.dataset.p, x.getAttribute('aria-checked')])), [['default', 'true'], ['barbie', 'false'], ['neon', 'false']]);
     const before = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
     await page.click('#paletteMenu [data-p="barbie"]');
     assert.deepEqual(await attrs(page), { theme: 'dark', palette: 'barbie' });
@@ -285,7 +285,7 @@ describe('語言與主題', () => {
   });
   test('每個色系在亮、暗兩種模式下，新增／刪除／修改的底色都彼此不同', async () => {
     const { page } = await app();
-    for (const palette of ['default', 'barbie']) {
+    for (const palette of await page.evaluate(() => PALETTES)) {
       for (const theme of ['dark', 'light']) {
         const v = await page.evaluate(([p, t]) => {
           const r = document.documentElement; r.dataset.palette = p; r.dataset.theme = t;
@@ -295,6 +295,32 @@ describe('語言與主題', () => {
         assert.equal(new Set(v).size, 4, `${palette}/${theme}：${v.join(' ')}`);
       }
     }
+  });
+  test('每個色系都能選取，重新整理後仍被記住（防止新增色系時漏改 <head> 的白名單）', async () => {
+    const { page } = await app();
+    const palettes = await page.evaluate(() => PALETTES);
+    assert.ok(palettes.length >= 3);
+    for (const id of palettes) {
+      await page.click('#paletteBtn');
+      await page.click(`#paletteMenu [data-p="${id}"]`);
+      await page.reload();
+      assert.equal(await page.evaluate(() => document.documentElement.dataset.palette), id, id);
+    }
+  });
+  test('霓虹色系有彩虹動畫；系統設為「減少動態」時全部關閉', async () => {
+    const anim = p => p.evaluate(() => [getComputedStyle(document.querySelector('header h1')).animationName,
+      getComputedStyle(document.querySelector('.card'), '::before').animationName,
+      getComputedStyle(document.querySelector('.card h2 .step')).animationName]);
+    const on = await app();
+    await on.page.evaluate(() => { localStorage.setItem('revdiff-palette', 'neon'); });
+    await on.page.reload();
+    assert.ok((await anim(on.page)).every(n => n !== 'none'), '有動畫：' + (await anim(on.page)));
+    const off = await app({ reducedMotion: 'reduce' });
+    await off.page.evaluate(() => { localStorage.setItem('revdiff-palette', 'neon'); });
+    await off.page.reload();
+    assert.deepEqual(await anim(off.page), ['none', 'none', 'none']);
+    const plain = await app();
+    assert.deepEqual(await anim(plain.page), ['none', 'none', 'none'], '預設色系沒有動畫');
   });
   test('語言切換後，色系選單與提示文字一起換', async () => {
     const { page } = await app({ locale: 'en-US' });

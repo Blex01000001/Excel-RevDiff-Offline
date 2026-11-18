@@ -18,7 +18,7 @@ $('#themeBtn').addEventListener('click', () => {
 });
 
 /* ----- 色系（膠囊按鈕右半邊的選單） ----- */
-const PALETTES = ['default', 'barbie'];   // template.html <head> 的防閃爍腳本有同一份白名單
+const PALETTES = ['default', 'barbie', 'neon'];   // template.html <head> 的防閃爍腳本有同一份白名單
 function curPalette(){ const p = document.documentElement.getAttribute('data-palette'); return PALETTES.includes(p) ? p : 'default'; }
 function renderPaletteMenu(){
   const cur = curPalette();
