@@ -468,6 +468,35 @@ describe('語言與主題', () => {
     assert.equal(off.anim, 'none');
     assert.equal(off.full, true);
   });
+  test('過年紅包色系：金邊雙框、燈籠與紅包裝飾、標題金色流光、金幣進度條；減少動態時全部靜態', async () => {
+    const look = async opts => {
+      const { page } = await app(opts);
+      return page.evaluate(() => {
+        document.documentElement.dataset.palette = 'hongbao';
+        const q = (s, ps) => getComputedStyle(document.querySelector(s), ps);
+        const out = { rings: q('.card').boxShadow !== 'none', shimmer: q('header h1').animationName, lantern: q('header h1', '::before').content, envelope: q('.card h2', '::after').content };
+        showBusy('x');
+        out.lanterns = [q('#busy .box', '::before').content, q('#busy .box', '::after').content]; out.busyTitle = q('#busy .t', '::before').content;
+        out.coins = q('#busy .bar i').backgroundImage.includes('radial-gradient'); out.anim = q('#busy .bar i').animationName;
+        const bar = document.querySelector('#busy .bar'), thumb = document.querySelector('#busy .bar i');
+        out.full = thumb.getBoundingClientRect().width >= bar.getBoundingClientRect().width - 5;
+        hideBusy(); return out;
+      });
+    };
+    const on = await look();
+    assert.equal(on.rings, true);
+    assert.notEqual(on.shimmer, 'none');
+    assert.match(on.lantern, /🏮/);
+    assert.match(on.envelope, /🧧/);
+    assert.deepEqual(on.lanterns.map(x => /🏮/.test(x)), [true, true]);
+    assert.match(on.busyTitle, /🧧/);
+    assert.equal(on.coins, true);
+    assert.equal(on.anim, 'slide');
+    const off = await look({ reducedMotion: 'reduce' });
+    assert.equal(off.shimmer, 'none');
+    assert.equal(off.anim, 'none');
+    assert.equal(off.full, true);
+  });
   test('語言切換後，色系選單與提示文字一起換', async () => {
     const { page } = await app({ locale: 'en-US' });
     await page.click('#paletteBtn');
