@@ -52,6 +52,7 @@ header .sub{color:var(--muted);font-size:12px}
 .sw-barbie{background:linear-gradient(135deg,#ff6ec7 50%,#ffc3e8 50%)}
 .sw-neon{background:conic-gradient(#ff004d,#ffae00,#37ff00,#00f0ff,#b400ff,#ff00e6,#ff004d)}
 .sw-win95{background:linear-gradient(135deg,#008080 50%,#c0c0c0 50%)}
+.sw-boba{background:radial-gradient(circle at 70% 70%,#2a1a10 0 22%,transparent 24%),linear-gradient(135deg,#f0d3a8 50%,#c98240 50%)}
 .pmenu .ck{margin-left:auto;visibility:hidden;color:var(--accent)}
 .pmenu button[aria-checked="true"] .ck{visibility:visible}
 .card{scroll-margin-top:72px}
@@ -295,3 +296,35 @@ th.dth:hover{color:var(--accent)}
 :root[data-palette="win95"] #busy .bar{height:22px;margin:14px 12px 0;padding:2px;background:var(--sunken);border:2px solid;border-color:var(--bevel-lo) var(--bevel-hi) var(--bevel-hi) var(--bevel-lo)}
 :root[data-palette="win95"] #busy .bar i{inset:2px auto 2px 2px;width:40%;background:repeating-linear-gradient(90deg,var(--accent) 0 10px,transparent 10px 12px);animation:slide 1.6s steps(10) infinite}
 @media (prefers-reduced-motion:reduce){:root[data-palette="win95"] #busy .bar i{animation:none;width:calc(100% - 4px)}}
+
+/* ===== 色系：珍珠奶茶（亮＝奶茶色，暗＝黑糖；步驟徽章是珍珠，遮罩的進度條是一串珍珠） ===== */
+:root[data-palette="boba"][data-theme="light"]{
+  --bg:#f3e3cc;--panel:#fff8ee;--text:#4a2c17;--muted:#7d583a;--line:#e0c19a;--accent:#a8642b;--accent-soft:#f6dcb8;
+  --add:#d9f0c8;--add-t:#2f6b17;--del:#ffd2c9;--del-t:#a3321f;--mod:#ffeaa8;--mod-t:#6f5200;--same-t:#6a4a30;
+  --old:#b3321f;--on-accent:#fff8ee;--hover:rgba(168,100,43,.10);--pearl:#2a1a10;--dots:rgba(74,44,23,.10);
+}
+:root[data-palette="boba"][data-theme="dark"]{
+  --bg:#1d120b;--panel:#2b1a10;--text:#f6e6d0;--muted:#cfa883;--line:#5a3a24;--accent:#e9a45c;--accent-soft:#4a2e1a;
+  --add:#25401c;--add-t:#a9e58a;--del:#4d1e17;--del-t:#ffa08e;--mod:#53400f;--mod-t:#ffe08a;--same-t:#e0c4a3;
+  --old:#ff9b84;--on-accent:#2b1a10;--hover:rgba(255,200,140,.12);--pearl:#f0c48a;--dots:rgba(255,214,170,.07);
+}
+:root[data-palette="boba"] body{background-image:radial-gradient(circle at 18px 18px,var(--dots) 0 6px,transparent 7px),radial-gradient(circle at 46px 46px,var(--dots) 0 4px,transparent 5px);background-size:64px 64px}
+:root[data-palette="boba"]{scrollbar-color:var(--accent) transparent}
+:root[data-palette="boba"] ::selection{background:var(--accent);color:var(--on-accent)}
+:root[data-palette="boba"] header{border-bottom:3px dashed var(--line)}
+:root[data-palette="boba"] header h1{font-family:"Hiragino Maru Gothic ProN","Arial Rounded MT Bold","Varela Round","Microsoft JhengHei",sans-serif;font-size:20px;color:var(--accent);text-shadow:0 1px 0 var(--accent-soft)}
+:root[data-palette="boba"] header h1::before{content:"🥤 "}
+:root[data-palette="boba"] .card{border:2px solid var(--line);border-radius:24px;box-shadow:0 6px 0 var(--line)}
+:root[data-palette="boba"] .card h2::after{content:"🥤";margin-left:auto}
+:root[data-palette="boba"] .card h2 .step{background:radial-gradient(circle at 35% 30%,var(--accent-soft) 0 12%,var(--pearl) 60%);color:var(--panel);box-shadow:0 2px 0 var(--line)}
+:root[data-palette="boba"] .stat{border-radius:20px}
+:root[data-palette="boba"] button.primary,:root[data-palette="boba"] .btn,:root[data-palette="boba"] .fchip{border-radius:999px}
+:root[data-palette="boba"] button.primary{background-image:linear-gradient(rgba(255,255,255,.18),rgba(0,0,0,.10));box-shadow:0 3px 0 rgba(0,0,0,.22)}
+:root[data-palette="boba"] .pmenu{border-radius:18px}
+/* 處理中遮罩：杯子一樣的圓角框，進度條是一串珍珠 */
+:root[data-palette="boba"] #busy{background:rgba(74,44,23,.45)}
+:root[data-palette="boba"] #busy .box{border:3px solid var(--accent);border-radius:26px;box-shadow:0 8px 0 var(--line),0 16px 40px rgba(0,0,0,.35)}
+:root[data-palette="boba"] #busy .t::before{content:"🥤 "}
+:root[data-palette="boba"] #busy .bar{height:16px;border:2px solid var(--line);border-radius:999px;background:var(--accent-soft)}
+:root[data-palette="boba"] #busy .bar i{background:radial-gradient(circle at 50% 50%,var(--pearl) 0 5px,transparent 6px) 0 50%/16px 100% repeat-x}
+@media (prefers-reduced-motion:reduce){:root[data-palette="boba"] #busy .bar i{animation:none;width:100%}}

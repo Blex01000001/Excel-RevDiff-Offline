@@ -413,6 +413,33 @@ describe('語言與主題', () => {
     assert.equal(off.anim, 'none');
     assert.equal(off.full, true);
   });
+  test('珍珠奶茶色系：圓角杯身、珍珠徽章、一串珍珠的進度條；減少動態時進度條靜態', async () => {
+    const look = async opts => {
+      const { page } = await app(opts);
+      return page.evaluate(() => {
+        document.documentElement.dataset.palette = 'boba';
+        const q = (s, ps) => getComputedStyle(document.querySelector(s), ps);
+        const out = { radius: q('.card').borderTopLeftRadius, pearl: q('.card h2 .step').backgroundImage.includes('radial-gradient'), icon: q('header h1', '::before').content };
+        showBusy('x');
+        out.box = q('#busy .box').borderTopLeftRadius; out.bar = q('#busy .bar i').backgroundImage.includes('radial-gradient');
+        out.busyTitle = q('#busy .t', '::before').content; out.anim = q('#busy .bar i').animationName;
+        const bar = document.querySelector('#busy .bar'), thumb = document.querySelector('#busy .bar i');
+        out.full = thumb.getBoundingClientRect().width >= bar.getBoundingClientRect().width - 5;
+        hideBusy(); return out;
+      });
+    };
+    const on = await look();
+    assert.equal(on.radius, '24px');
+    assert.equal(on.pearl, true);
+    assert.match(on.icon, /🥤/);
+    assert.equal(on.box, '26px');
+    assert.equal(on.bar, true);
+    assert.match(on.busyTitle, /🥤/);
+    assert.equal(on.anim, 'slide');
+    const off = await look({ reducedMotion: 'reduce' });
+    assert.equal(off.anim, 'none');
+    assert.equal(off.full, true);
+  });
   test('語言切換後，色系選單與提示文字一起換', async () => {
     const { page } = await app({ locale: 'en-US' });
     await page.click('#paletteBtn');
